@@ -1,0 +1,17 @@
+*.pptx
+*.pdf
+*.docx
+*.svg
+*.tsv
+*.txt
+*.csv
+*.xlsx
+*.txt.gz
+*.mat
+*.rds
+/results/*
+/notes/*
+/data/*
+/ref/*/*
+
+.Rproj.user
