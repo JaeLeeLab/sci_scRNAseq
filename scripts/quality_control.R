@@ -506,3 +506,51 @@ for(ii in 1:length(filtered_counts)) {
 }
 saveRDS(metadata, file = paste0(results_out, 'metadata.rds'))
 rm(list = ls())
+
+
+
+
+# For resubmission --------------------------------------------------------
+
+qc_theme <- theme(axis.text.x = element_text(angle = 45, size = 12, hjust = 1, color = 'black'),
+                  axis.text.y = element_text(size = 12, color = 'black'),
+                  axis.title.x = element_blank(),
+                  axis.title.y = element_text(size = 14, color = 'black'),
+                  panel.background = element_rect(fill = NA, color = 'black'),
+                  panel.border = element_rect(fill = NA, color = 'black'),
+                  # panel.grid.major = element_line(color = 'grey', linetype = 'dashed'),
+                  legend.position = 'none')
+
+umi_plot <- sci@meta.data %>%
+  ggplot(mapping = aes(x = sample_id, y = library_size)) +
+  geom_violin(mapping = aes(fill = sample_id), scale = 'width') +
+  geom_boxplot(mapping = aes(fill = sample_id), outlier.size = 0, width = 0.2) +
+  scale_y_continuous(trans = 'log10',
+                     limits = c(1000, 100000),
+                     breaks = c(10^seq(1,10,1), 3*10^seq(1,10,1)),
+                     labels = scales::comma) +
+  ylab(label = 'Library size (# UMI)') +
+  qc_theme
+
+n_genes_plot <- sci@meta.data %>%
+  ggplot(mapping = aes(x = sample_id, y = n_genes)) +
+  geom_violin(mapping = aes(fill = sample_id), scale = 'width') +
+  geom_boxplot(mapping = aes(fill = sample_id), outlier.size = 0, width = 0.2) +
+  scale_y_continuous(trans = 'log10',
+                     breaks = c(10^seq(1,10,1), 3*10^seq(1,10,1), 7*10^seq(1,10,1), 2*10^seq(1,10,1)),
+                     labels = scales::comma) +
+  ylab(label = '# Unique Genes') +
+  qc_theme
+
+percent_mt_plot <- sci@meta.data %>%
+  ggplot(mapping = aes(x = sample_id, y = percent_mt)) +
+  geom_violin(mapping = aes(fill = sample_id), scale = 'width') +
+  geom_boxplot(mapping = aes(fill = sample_id), outlier.size = 0, width = 0.2) +
+  scale_y_continuous(trans = 'log10',
+                     breaks = c(0.001, 0.01, 0.03, 0.1, 0.2, 1)) +
+  ylab(label = 'Mitochondrial [mt-] %') +
+  qc_theme
+
+qc_plot <- umi_plot + n_genes_plot + percent_mt_plot
+ggsave(filename = './results/revision_figures/qc_plot.tiff',
+       plot = qc_plot, height = 4, width = 14)

@@ -372,6 +372,123 @@ ggsave(filename = paste0(results_out, 'macroglia_subcluster_markers_dotplot.tiff
 
 
 
+# DE markers dot plot (significant p-values) ----------------------------------
+
+# Calculate DE
+de_genes <- FindAllMarkers(object = macroglia,
+                           assay = 'RNA',
+                           logfc.threshold = 0.5,
+                           only.pos = TRUE)
+# Differences between Ependymal-A and Ependymal-B
+ependymalA_ependymalB <- FindMarkers(macroglia,
+                                     ident.1 = 'Ependymal-A',
+                                     ident.2 = 'Ependymal-B',
+                                     assay = 'RNA',
+                                     logfc.threshold = 0.5)
+# Differences between OPC-A and OPC-B
+opcA_opcB <- FindMarkers(macroglia,
+                         ident.1 = 'OPC-A',
+                         ident.2 = 'OPC-B',
+                         assay = 'RNA',
+                         logfc.threshold = 0.25)
+union(de_genes$gene[de_genes$cluster == 'OPC-B'], rownames(opcA_opcB)[opcA_opcB$avg_logFC < 0])
+
+
+# Select marker genes
+de_markers <- c('Pan-Ependymal' = 'Foxj1',
+                'Ependymal-A' = 'Tmem212',
+                'Ependymal-B' = 'Rbp1',
+                'Astroependymal' = 'Crym',
+                'Astrocyte' = 'Agt',
+                'OPC-A1' = 'Tnr',
+                'OPC-B' = 'Tnc',
+                'Div-OPC' = 'Cdk1',
+                'Pre-Oligo' = 'Bmp4',
+                'Oligodendrocyte' = 'Mag')
+tmp_de <- FindAllMarkers(
+  object = macroglia,
+  assay = 'RNA',
+  slot = 'data',
+  features = de_markers,
+  only.pos = TRUE
+)
+tmp_de$p_val_adj <- signif(tmp_de$p_val_adj, digits = 2)
+tmp_de$variable <- tmp_de$gene
+tmp_de$signif <- ifelse(test = tmp_de$p_val < 1e-10,
+                        yes = '*',
+                        no = '')
+
+DefaultAssay(macroglia) <- 'RNA'
+avg_exp <- data.frame(t(ScaleData(macroglia[['RNA']]@data, features = de_markers)))
+avg_exp <- cbind(avg_exp, 'macroglia_subcluster' = as.character(macroglia@meta.data[,c('macroglia_subcluster')])) %>%
+  reshape2::melt(id.vars = c('macroglia_subcluster')) %>%
+  group_by(macroglia_subcluster, variable) %>%
+  summarise(avg.exp = mean(value))
+pct_exp <- data.frame(t(macroglia[['RNA']]@counts[unlist(de_markers, use.names = FALSE),]))
+pct_exp <- cbind(pct_exp, 'macroglia_subcluster' = as.character(macroglia@meta.data[,c('macroglia_subcluster')])) %>%
+  reshape2::melt(id.vars = c('macroglia_subcluster')) %>%
+  group_by(macroglia_subcluster, variable) %>%
+  summarise(pct.exp = mean(value > 0) * 100)
+
+# max_expr <- 3
+# min_expr <- floor(min(avg_exp$avg.exp)*10)/10
+max_expr <- 3
+min_expr <- -3
+myColors <- rev(colorRampPalette(colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
+# myBreaks <- c(seq(min_expr, 0, length.out = 50),
+#               seq(max_expr/100, max_expr, length.out = 50))
+
+de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
+  filter(macroglia_subcluster != 'U-macroglia') %>%
+  mutate(macroglia_subcluster = factor(macroglia_subcluster, levels = rev(levels(macroglia$macroglia_subcluster)))) %>%
+  ggplot(mapping = aes(x = variable, y = macroglia_subcluster)) +
+  geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
+  geom_text(data = tmp_de, mapping = aes(x = variable, y = cluster, label = signif),
+            size = 8, fontface = 'bold', nudge_y = -0.09, nudge_x = 0.01) +
+  scale_size(range = c(0,10), limits = c(0,100)) +
+  scale_fill_gradientn(
+    colors = myColors,
+    limits = c(min_expr, max_expr), 
+    na.value = myColors[100],
+    breaks = c(min_expr, 0, max_expr)) +
+  scale_y_discrete(position = 'right') +
+  theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
+        axis.text.y = element_text(size = 14, color = 'black'),
+        strip.background = element_rect(fill = NA, colour = NA),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.placement = 'outside',
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA),
+        legend.text = element_text(size = 12, color = 'black', hjust = 0),
+        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
+        legend.box.margin = margin(10,0,0,0,unit = 'mm'),
+        legend.margin = margin(0,0,0,0, unit = 'mm'),
+        legend.box = 'vertical',
+        legend.position = 'right',
+        legend.spacing.x = unit(x = 2, units = 'mm'),
+        panel.border = element_rect(fill = NA, size = 1),
+        panel.background = element_rect(fill = NA)) +
+  guides(fill = guide_colorbar(title = 'z-score', 
+                               barwidth = 1.25,
+                               frame.colour = 'black', 
+                               frame.linewidth = 1.25,
+                               ticks.colour = 'black', 
+                               ticks.linewidth = 1.25,
+                               title.position = 'left'), 
+         size = guide_legend(title = '% expression', 
+                             override.aes = list(fill = 'black'),
+                             title.position = 'left'))
+de_markers_dotplot
+ggsave(filename = './results/revision_figures/macroglia_subcluster_markers_dotplot.tiff',
+       plot = de_markers_dotplot, device = 'tiff', height = 3.75, width = 6.75)
+
+
+
+
+
 
 
 # DE markers heatmap ------------------------------------------------------
@@ -855,7 +972,7 @@ cilia_heatmap <- Heatmap(
   column_names_rot = 45,
   rect_gp = gpar(col = 'black'),
   heatmap_legend_param = list(
-    title = 'Scaled Expression',
+    title = 'z-score',
     title_gp = gpar(fontsize = 12),
     title_position = 'leftcenter-rot',
     labels = c('Low', 0, 'High'),

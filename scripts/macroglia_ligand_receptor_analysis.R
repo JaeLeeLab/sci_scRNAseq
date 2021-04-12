@@ -104,8 +104,60 @@ lr_results[['Receptor_cell']] <- factor(
   x = lr_results[['Receptor_cell']],
   levels = c('Neutrophil','Monocyte','Macrophage-A','Macrophage-B','BA-Macrophage','Dendritic','Div-Myeloid','Microglia-A','Microglia-B','Microglia-C','Div-Microglia','A-Endothelial', 'C-Endothelial','V-Endothelial','Tip Cell','Pericyte','VSMC', 'Fibroblast','Ependymal','Astroependymal','Astrocyte','OPC','Div-OPC','Pre-Oligo', 'Oligodendrocyte')
 )
-
-
+lr_results$Ligand_cell <- plyr::mapvalues(
+  x = lr_results$Ligand_cell,
+  from = c('Neutrophil',
+           'Monocyte',
+           'Macrophage-A',
+           'Macrophage-B',
+           'BA-Macrophage',
+           'Dendritic',
+           'Div-Myeloid',
+           'Microglia-A',
+           'Microglia-B',
+           'Microglia-C',
+           'Div-Microglia',
+           'IFN-Myeloid'),
+  to = c('Neutrophil',
+         'Monocyte',
+         'Chemotaxis-Inducing Mac',
+         'Inflammatory Mac',
+         'Border-Associated Mac',
+         'Dendritic',
+         'Dividing Myeloid',
+         'Homeostatic Microglia',
+         'Inflammatory Microglia',
+         'Migrating Microglia',
+         'Dividing Microglia',
+         'Interferon Myeloid')
+)
+lr_results$Receptor_cell <- plyr::mapvalues(
+  x = lr_results$Receptor_cell,
+  from = c('Neutrophil',
+           'Monocyte',
+           'Macrophage-A',
+           'Macrophage-B',
+           'BA-Macrophage',
+           'Dendritic',
+           'Div-Myeloid',
+           'Microglia-A',
+           'Microglia-B',
+           'Microglia-C',
+           'Div-Microglia',
+           'IFN-Myeloid'),
+  to = c('Neutrophil',
+         'Monocyte',
+         'Chemotaxis-Inducing Mac',
+         'Inflammatory Mac',
+         'Border-Associated Mac',
+         'Dendritic',
+         'Dividing Myeloid',
+         'Homeostatic Microglia',
+         'Inflammatory Microglia',
+         'Migrating Microglia',
+         'Dividing Microglia',
+         'Interferon Myeloid')
+)
 
 
 
@@ -121,7 +173,16 @@ il6_genes <- c(il6_ligs, il6_recs)
 # Take "known" interactions only
 known_lr <- lr_ref$Pair.Name[lr_ref$Pair.Source == 'known']
 
-ligand_celltypes <- c('Monocyte','Macrophage-A','Macrophage-B','H-Microglia','DAM-A','DAM-B','DAM-C','Fibroblast','Astroependymal','OPC')
+ligand_celltypes <- c('Monocyte',
+                      'Chemotaxis-Inducing Mac',
+                      'Inflammatory Mac',
+                      'Homeostatic Microglia',
+                      'Inflammatory Microglia',
+                      'Migrating Microglia',
+                      'Dividing Microglia',
+                      'Fibroblast',
+                      'Astroependymal',
+                      'OPC')
 receptor_celltypes <- c('Astroependymal','Astrocyte','Oligodendrocyte','OPC','Pericyte','Fibroblast')
 
 
@@ -144,10 +205,10 @@ il6_data <- lr_results %>%
   filter(Ligand_cell_pct >= 2.5 & Receptor_cell_pct >= 2.5) %>%
   filter(Pair_name %in% known_lr) %>%
   filter(!Pair_name %in% c('Osm_Lifr')) %>%
-  mutate(Receptor_cell = factor(Receptor_cell, 
-                                levels = c('Pericyte','Fibroblast','Astroependymal','Astrocyte','OPC','Oligodendrocyte')),
-         Ligand_cell = factor(Ligand_cell, 
-                              levels = c('Monocyte','Macrophage-A','Macrophage-B','H-Microglia','DAM-A','DAM-B','DAM-C','Fibroblast','Astroependymal','Astrocyte','OPC'))) %>%
+  # mutate(Receptor_cell = factor(Receptor_cell, 
+  #                               levels = c('Pericyte','Fibroblast','Astroependymal','Astrocyte','OPC','Oligodendrocyte')),
+  #        Ligand_cell = factor(Ligand_cell, 
+  #                             levels = c('Monocyte','Macrophage-A','Macrophage-B','H-Microglia','DAM-A','DAM-B','DAM-C','Fibroblast','Astroependymal','Astrocyte','OPC'))) %>%
   mutate(Receptor_cell = plyr::mapvalues(x = Receptor_cell, from = 'Astroependymal', to = 'Astroepen.')) %>%
   mutate(Ligand_cell = plyr::mapvalues(x = Ligand_cell, from = 'Astroependymal', to = 'Astroepen.'))
 max_score <- ceiling(max(il6_data$Score)*10)/10
@@ -233,6 +294,164 @@ ggsave(filename = paste0(results_out, 'IL6_LigandReceptorplot_flipped.tiff'),
        plot = il6_plot, device = 'tiff', height = 7.25, width = 16.5)
 
 
+
+# IL6 signaling (Ligand-receptor plot, resubmission version) ------------------
+
+
+lr_results <- read.table(file = paste0(results_in, 'sci_cluster_LigandReceptorResults_manuscript_interactions.tsv'))
+lr_ref <- read.csv(file = paste0(ref_in, 'fantom_PairsLigRec_mouse.csv'))
+
+lr_results[['pval']] <- as.numeric(lr_results[['pval']])
+lr_results[['pval']][lr_results[['Ligand_pct']] < 0.1] <- NA
+lr_results[['pval']][lr_results[['Receptor_pct']] < 0.1] <- NA
+lr_results[['log_pval']] <- -log10(lr_results[['pval']])
+lr_results[['log_pval']][is.infinite(lr_results[['log_pval']])] <- -log10(1/1000) # 1000 permutations
+lr_results[['time']] <- factor(lr_results[['split_by']], levels = c('Uninjured','1dpi','3dpi','7dpi'))
+lr_results[['Ligand_cell']] <- factor(
+  x = lr_results[['Ligand_cell']],
+  levels = c('Neutrophil','Monocyte','Macrophage-A','Macrophage-B','BA-Macrophage','Dendritic','Div-Myeloid','Microglia-A','Microglia-B','Microglia-C','Div-Microglia','A-Endothelial', 'C-Endothelial','V-Endothelial','Tip Cell','Pericyte','VSMC', 'Fibroblast','Ependymal','Astroependymal','Astrocyte','OPC','Div-OPC','Pre-Oligo', 'Oligodendrocyte')
+)
+lr_results[['Receptor_cell']] <- factor(
+  x = lr_results[['Receptor_cell']],
+  levels = c('Neutrophil','Monocyte','Macrophage-A','Macrophage-B','BA-Macrophage','Dendritic','Div-Myeloid','Microglia-A','Microglia-B','Microglia-C','Div-Microglia','A-Endothelial', 'C-Endothelial','V-Endothelial','Tip Cell','Pericyte','VSMC', 'Fibroblast','Ependymal','Astroependymal','Astrocyte','OPC','Div-OPC','Pre-Oligo', 'Oligodendrocyte')
+)
+lr_results$Ligand_cell <- plyr::mapvalues(
+  x = lr_results$Ligand_cell,
+  from = c('Neutrophil',
+           'Monocyte',
+           'Macrophage-A',
+           'Macrophage-B',
+           'BA-Macrophage',
+           'Dendritic',
+           'Div-Myeloid',
+           'Microglia-A',
+           'Microglia-B',
+           'Microglia-C',
+           'Div-Microglia',
+           'IFN-Myeloid'),
+  to = c('Neutrophil',
+         'Monocyte',
+         'Chemotaxis-Inducing Mac',
+         'Inflammatory Mac',
+         'Border-Associated Mac',
+         'Dendritic',
+         'Dividing Myeloid',
+         'Homeostatic Microglia',
+         'Inflammatory Microglia',
+         'Migrating Microglia',
+         'Dividing Microglia',
+         'Interferon Myeloid')
+)
+lr_results$Receptor_cell <- plyr::mapvalues(
+  x = lr_results$Receptor_cell,
+  from = c('Neutrophil',
+           'Monocyte',
+           'Macrophage-A',
+           'Macrophage-B',
+           'BA-Macrophage',
+           'Dendritic',
+           'Div-Myeloid',
+           'Microglia-A',
+           'Microglia-B',
+           'Microglia-C',
+           'Div-Microglia',
+           'IFN-Myeloid'),
+  to = c('Neutrophil',
+         'Monocyte',
+         'Chemotaxis-Inducing Mac',
+         'Inflammatory Mac',
+         'Border-Associated Mac',
+         'Dendritic',
+         'Dividing Myeloid',
+         'Homeostatic Microglia',
+         'Inflammatory Microglia',
+         'Migrating Microglia',
+         'Dividing Microglia',
+         'Interferon Myeloid')
+)
+
+
+il6.genes <- list('Ligands' = c('Il6','Cntf','Lif','Ctf1','Ctf2','Osm','Il11','Il31','Clcf1','Il27'),
+                  'Receptors' = c('Il6st','Il6ra','Lifr','Cntfr','Osmr','Il11ra1'))
+il6_ligs <- il6.genes$Ligands
+il6_ligs <- c('Osm','Il6','Clcf1')
+il6_recs <- il6.genes$Receptors
+il6_genes <- c(il6_ligs, il6_recs)
+
+# Take "known" interactions only
+known_lr <- lr_ref$Pair.Name[lr_ref$Pair.Source == 'known']
+
+ligand_celltypes <- c('Monocyte',
+                      'Chemotaxis-Inducing Mac',
+                      'Inflammatory Mac',
+                      'Homeostatic Microglia',
+                      'Inflammatory Microglia',
+                      'Migrating Microglia',
+                      'Dividing Microglia',
+                      'Fibroblast',
+                      'Astroependymal',
+                      'OPC')
+receptor_celltypes <- c('Astroependymal',
+                        'Astrocyte',
+                        'Oligodendrocyte',
+                        'OPC',
+                        'Pericyte',
+                        'Fibroblast')
+
+# Reproduce manuscript figure
+il6_data <- lr_results %>%
+  filter(Ligand_cell %in% ligand_celltypes) %>%
+  filter(Receptor_cell %in% receptor_celltypes) %>%
+  filter(Ligand %in% il6_genes & Receptor %in% il6_genes) %>%
+  filter(Ligand_cell_pct >= 2.5 & Receptor_cell_pct >= 2.5) %>%
+  filter(Pair_name %in% known_lr) %>%
+  filter(!Pair_name %in% c('Osm_Lifr')) %>%
+  mutate(Receptor_cell = plyr::mapvalues(x = Receptor_cell, from = 'Astroependymal', to = 'Astroepen.')) %>%
+  mutate(Ligand_cell = plyr::mapvalues(x = Ligand_cell, from = 'Astroependymal', to = 'Astroepen.'))
+max_score <- ceiling(max(il6_data$Score)*10)/10
+min_score <- floor(min(il6_data$Score)*10)/10
+
+il6_plot <- il6_data %>%
+  ggplot() +
+  geom_point(mapping = aes(x = Ligand_cell, y = Pair_name, size = log_pval, fill = Score),
+             color = 'black',
+             pch = 21) +
+  facet_grid(time ~ Receptor_cell, switch = 'x', drop = TRUE) +
+  scale_fill_gradientn(colors = rev(RColorBrewer::brewer.pal(n = 10, name = 'Spectral')),
+                       breaks = c(min_score, 0.5, max_score),
+                       limits = c(min_score, max_score),
+                       labels = c(min_score,0.5, max_score)) +
+  scale_radius(limits = c(0,NA), range = c(1,7)) +
+  scale_y_discrete(position = 'left') +
+  scale_x_discrete(position = 'top') +
+  xlab(label = 'Ligand cell') +
+  ylab(label = 'Ligand_Receptor Pair') +
+  theme(strip.text = element_text(size = 14, color = 'black', face = 'bold'),
+        strip.background = element_rect(fill = NA, color = NA),
+        axis.title.x.top = element_text(size = 12, color = 'black', face = 'bold'),
+        axis.title.y.left = element_text(size = 12, color = 'black', face = 'bold'),
+        axis.text = element_text(size = 12, color = 'black'),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0, size = 12),
+        legend.text = element_text(size = 12, color = 'black'),
+        legend.title = element_text(size = 12, color = 'black', angle = 0, face = 'bold', hjust = 0.5),
+        legend.key = element_rect(fill = NA),
+        panel.background = element_rect(fill = NA, color = 'black'),
+        panel.grid.major = element_line(size = 0.5, linetype = 'dotted', color = 'grey70'),
+        legend.position = 'bottom',
+        legend.direction = 'horizontal',
+        legend.box.margin = margin(-10,0,-10,0)) +
+  guides(fill = guide_colorbar(title = 'Score',
+                               title.position = 'top',
+                               frame.linewidth = 1,
+                               ticks.linewidth = 1,
+                               frame.colour = 'black',
+                               ticks.colour = 'black'),
+         size = guide_legend(title = '-log10(p-value)', 
+                             title.position = 'top',
+                             override.aes = list(fill = 'black')))
+il6_plot
+ggsave(filename = './results/revision_figures/LR_results/IL6_LigandReceptorplot_flipped.tiff',
+       plot = il6_plot, device = 'tiff', height = 8.5, width = 16.5)
 
 
 
@@ -479,3 +698,253 @@ il6_receptor_dotplot <- merge(avg_exp, pct_exp) %>%
                              title.position = 'left')); il6_receptor_dotplot
 ggsave(filename = paste0(results_out, 'IL6_receptor_dotplot.tiff'),
        plot = il6_receptor_dotplot, device = 'tiff', height = 6, width = 8.75)
+
+
+
+# Validates scores with expression dot plot (p-values) -------------------------
+
+
+# IL6 genes
+il6_genes <- list('Ligands' = c('Il6','Cntf','Lif','Ctf1','Ctf2','Osm','Il11','Il31','Clcf1','Il27'),
+                  'Receptors' = c('Il6st','Il6ra','Lifr','Cntfr','Osmr','Il11ra1'))
+# il6_ligands <- il6_genes$Ligands
+# il6_receptors <- il6_genes$Receptors
+il6_ligands <- c('Osm','Clcf1','Il6')
+il6_receptors <- c('Il6st','Il6ra','Lifr','Cntfr','Osmr','Il11ra1')
+
+# We first have to map subcluster identities back to full SCI dataset.
+subcluster_paths <- list(
+  'myeloid_subclusters' = './results/myeloid_annotation_markers/myeloid_subcluster.tsv',
+  'vascular_subclusters' = './results/vascular_annotation_markers/vascular_subcluster.tsv',
+  'macroglia_subclusters' = './results/macroglia_annotation_markers/macroglia_subcluster.tsv'
+)
+# Load
+subclusters_bySet <- lapply(
+  X = subcluster_paths,
+  FUN = read.table,
+  sep = '\t',
+  header = TRUE,
+  row.names = 1
+)
+# Extract labels and barcodes
+subclusters <- Reduce(
+  f = c, 
+  x = sapply(
+    X = subclusters_bySet,
+    FUN = `[[`,
+    1
+  )
+)
+barcodes <- Reduce(
+  f = c,
+  x = sapply(
+    X = subclusters_bySet,
+    FUN = rownames
+  )
+)
+names(subclusters) <- barcodes
+rm(barcodes, subcluster_paths)
+
+# Add to sci metadata
+sci@meta.data[['subcluster']] <- subclusters[match(x = rownames(sci@meta.data), 
+                                                   table = names(subclusters))]
+# label unassigned cells
+sci@meta.data[['subcluster']][is.na(sci@meta.data[['subcluster']])] <- 'Unassigned'
+sci@meta.data[['subcluster']] <- plyr::mapvalues(
+  x = sci@meta.data[['subcluster']],
+  from = c('Neutrophil',
+           'Monocyte',
+           'Macrophage-A',
+           'Macrophage-B',
+           'BA-Macrophage',
+           'Dendritic',
+           'Div-Myeloid',
+           'H-Microglia',
+           'DAM-A',
+           'DAM-B',
+           'DAM-C',
+           'IFN-Myeloid'),
+  to = c('Neutrophil',
+         'Monocyte',
+         'Chemotaxis-Inducing Mac',
+         'Inflammatory Mac',
+         'Border-Associated Mac',
+         'Dendritic',
+         'Dividing Myeloid',
+         'Homeo Microglia',
+         'Inflamm Microglia',
+         'Dividing Microglia',
+         'Migrating Microglia',
+         'Interferon Myeloid')
+)
+
+
+# Subset subcluster identities of interest
+select_sci_subclusters <- c('Neutrophil',
+                            'Monocyte',
+                            'Chemotaxis-Inducing Mac',
+                            'Inflammatory Mac',
+                            'Dividing Myeloid',
+                            'Homeo Microglia',
+                            'Inflamm Microglia',
+                            'Dividing Microglia',
+                            'Migrating Microglia',
+                            'Border-Associated Mac',
+                            'A-Endothelial',
+                            'C1-Endothelial',
+                            'C2-Endothelial',
+                            'V-Endothelial',
+                            'Tip Cell',
+                            'Fibroblast',
+                            'Pericyte',
+                            'VSMC',
+                            'Ependymal-A',
+                            'Ependymal-B',
+                            'Astroependymal',
+                            'Astrocyte',
+                            'OPC-A',
+                            'OPC-B',
+                            'Div-OPC',
+                            'Oligodendrocyte')
+Idents(sci) <- 'subcluster'
+select_sci <- subset(sci, idents = select_sci_subclusters)
+Idents(select_sci) <- 'subcluster'
+
+
+# Calculate values for ligand dot plot
+DefaultAssay(select_sci) <- 'RNA'
+avg_exp_lig <- ScaleData(select_sci[['RNA']]@data, features = c(il6_ligands))
+avg_exp_lig <- cbind(t(avg_exp_lig), select_sci@meta.data[,c('subcluster','time')]) %>%
+  reshape2::melt(id.vars = c('subcluster','time')) %>%
+  group_by(subcluster, time, variable) %>%
+  summarise(avg.exp = mean(value))
+pct_exp_lig <- select_sci[['RNA']]@counts[c(il6_ligands),]
+pct_exp_lig <- cbind(Matrix::t(pct_exp_lig), select_sci@meta.data[,c('subcluster','time')]) %>%
+  reshape2::melt(id.vars = c('subcluster','time')) %>%
+  group_by(subcluster, time, variable) %>%
+  summarise(pct.exp = mean(value > 0) * 100)
+
+# Calculate values for receptor dot plot
+DefaultAssay(select_sci) <- 'RNA'
+avg_exp_rec <- ScaleData(select_sci[['RNA']]@data, features = c(il6_receptors), scale.max = 3.5)
+avg_exp_rec <- cbind(t(avg_exp_rec), select_sci@meta.data[,c('subcluster','time')]) %>%
+  reshape2::melt(id.vars = c('subcluster','time')) %>%
+  group_by(subcluster, time, variable) %>%
+  summarise(avg.exp = mean(value))
+pct_exp_rec <- select_sci[['RNA']]@counts[c(il6_receptors),]
+pct_exp_rec <- cbind(Matrix::t(pct_exp_rec), select_sci@meta.data[,c('subcluster','time')]) %>%
+  reshape2::melt(id.vars = c('subcluster','time')) %>%
+  group_by(subcluster, time, variable) %>%
+  summarise(pct.exp = mean(value > 0) * 100)
+
+
+lig_dat <- merge(avg_exp_lig, pct_exp_lig) %>%
+  mutate('class' = 'ligand')
+rec_dat <- merge(avg_exp_rec, pct_exp_rec) %>%
+  mutate('class' = 'receptor')
+il6_dat <- rbind(lig_dat, rec_dat) %>%
+  mutate(subcluster = factor(subcluster, levels = select_sci_subclusters))
+
+low_prop <- prop.table(table(select_sci$subcluster, select_sci$time), margin = 1) < 0.015
+for (i in 1:nrow(il6_dat)) {
+  if (low_prop[as.character(il6_dat$subcluster[i]), as.character(il6_dat$time[i])]) {
+    il6_dat$avg.exp[i] <- 0
+    il6_dat$pct.exp[i] <- 0
+  }
+}
+
+max_z <- ifelse(
+  test = max(il6_dat$avg.exp) > min(il6_dat$avg.exp),
+  yes = max(il6_dat$avg.exp),
+  no = max(abs(il6_dat$avg.exp))
+)
+max_z <- ceiling(max_z*10)/10
+myColors <- rev(RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))
+
+select_sci$tmp_de <- paste(select_sci$subcluster, select_sci$time, sep = '_')
+Idents(select_sci) <- 'tmp_de'
+tmp_de <- FindAllMarkers(
+  object = select_sci,
+  assay = 'RNA',
+  slot = 'data',
+  only.pos = TRUE,
+  features = unique(c(il6_ligands, il6_receptors)),
+  logfc.threshold = 0
+)
+tmp_ident <- strsplit(x = as.character(tmp_de$cluster), split = '_')
+tmp_celltype <- sapply(tmp_ident, `[`, 1)
+tmp_time <- sapply(tmp_ident, `[`, 2)
+tmp_de$celltype <- tmp_celltype
+tmp_de$time <- tmp_time
+
+
+il6_dat$significant <- 1
+for (i in 1:nrow(il6_dat)) {
+  which_row <- which(as.character(tmp_de$celltype) == as.character(il6_dat$subcluster[i]) & 
+                       as.character(tmp_de$time) == as.character(il6_dat$time[i]) &
+                       as.character(tmp_de$gene) == as.character(il6_dat$variable[i]))
+  if (length(which_row) == 1) {
+    il6_dat$significant[i] <- tmp_de$p_val_adj[which_row]
+  }
+}
+il6_dat$significant <- ifelse(test = il6_dat$significant < 1e-10,
+                              yes = '*',
+                              no = ' ')
+
+make_plot <- function(x) {
+  tmp <- x %>%
+    ggplot(mapping = aes(x = subcluster, y = variable)) +
+    geom_point(mapping = aes(size = pct.exp, fill = avg.exp), pch = 21, color = 'black') +
+    geom_text(mapping = aes(label = significant), size = 6, nudge_y = -0.15) +
+    geom_vline(xintercept = 10.5, linetype = 'dashed', color = 'black', size = 1) +
+    geom_vline(xintercept = 18.5, linetype = 'dashed', color = 'black', size = 1) +
+    facet_grid(time ~ .) +
+    scale_size(range = c(0,8), limits = c(0,100), breaks = seq(25,100,25)) +
+    scale_fill_gradientn(colors = myColors,
+                         limits = c(-max_z, max_z),
+                         breaks = c(-max_z, 0, max_z),
+                         na.value = myColors[9]) +
+    theme(axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
+          axis.text.y = element_text(size = 12, color = 'black'),
+          strip.background = element_rect(fill = NA, colour = 'black'),
+          strip.text.y = element_text(angle = 270, hjust = 0.5, face = 'bold', size = 12, color = 'black'),
+          strip.text.x = element_text(size = 12, face = 'bold', color = 'black'),
+          strip.placement = 'outside',
+          legend.background = element_rect(fill = NA),
+          legend.key = element_rect(fill = NA),
+          legend.text = element_text(size = 12, color = 'black', hjust = 0.5),
+          legend.title = element_text(size = 12, color = 'black', hjust = 0.4),
+          legend.box.margin = margin(-10, 0, 10, 0),
+          legend.box = 'horizontal',
+          legend.position = 'bottom',
+          legend.justification = 'right',
+          panel.border = element_rect(fill = NA, size = 1, color = 'grey60'),
+          panel.background = element_rect(fill = NA)) +
+    guides(fill = guide_colorbar(title = 'z-score', 
+                                 barwidth = 4,
+                                 barheight = 1,
+                                 frame.colour = 'black', 
+                                 frame.linewidth = 1.25,
+                                 ticks.colour = 'black',
+                                 ticks.linewidth = 1.25,
+                                 title.position = 'top'), 
+           size = guide_legend(title = '% Expression', 
+                               override.aes = list(fill = 'black'), 
+                               title.position = 'top'))
+  return(tmp)
+}
+
+lig_plot <- il6_dat %>%
+  filter(class == 'ligand') %>%
+  make_plot() +
+  theme(plot.margin=unit(c(5.5, 5.5, 5.5, 20.5),"pt"))
+rec_plot <- il6_dat %>%
+  filter(class == 'receptor') %>%
+  make_plot() + NoLegend()
+il6_dotplot <- cowplot::plot_grid(lig_plot, rec_plot)
+il6_dotplot
+ggsave(filename = './results/revision_figures/macroglia_il6_dotplot.tiff',
+       plot = il6_dotplot, device = 'tiff', height = 6.25, width = 14.5)
+

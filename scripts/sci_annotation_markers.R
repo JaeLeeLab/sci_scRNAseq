@@ -435,7 +435,7 @@ de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
         legend.spacing.x = unit(x = 2, units = 'mm'),
         panel.border = element_rect(fill = NA, size = 1),
         panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'Scaled\nexpression', 
+  guides(fill = guide_colorbar(title = 'z-score', 
                                barwidth = 1.25,
                                frame.colour = 'black', 
                                frame.linewidth = 1.25,

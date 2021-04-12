@@ -266,6 +266,7 @@ de_markers <- c('A-Endothelial1' = 'Gkn3',
                 'VSMC' = 'Tagln',
                 'Fibroblast'= 'Col1a1')
 
+
 DefaultAssay(vascular) <- 'RNA'
 avg_exp <- data.frame(t(ScaleData(vascular[['RNA']]@data, features = de_markers)))
 avg_exp <- cbind(avg_exp, 'vascular_subcluster' = as.character(vascular@meta.data[,c('vascular_subcluster')])) %>%
@@ -331,6 +332,104 @@ de_markers_dotplot
 ggsave(filename = paste0(results_out, 'vascular_subcluster_markers_dotplot.tiff'),
        plot = de_markers_dotplot, device = 'tiff', height = 3.75, width = 7.25)
 
+
+
+
+
+# DE markers dot plot (with significant p-values) ------------------------------
+
+
+de_markers <- c('A-Endothelial1' = 'Gkn3',
+                'A-Endothelial2' = 'Stmn2',
+                'Endothelial1' = 'Cldn5',
+                'Endothelial2' = 'Ly6a',
+                'V-Endothelial1' = 'Slc38a5',
+                'V-Endothelial2' = 'Icam1',
+                'Tip Cell' = 'Apln',
+                'Pericyte' = 'Kcnj8',
+                'VSMC' = 'Tagln',
+                'Fibroblast'= 'Col1a1')
+tmp_de <- FindAllMarkers(
+  object = vascular,
+  assay = 'RNA',
+  slot = 'data',
+  features = de_markers,
+  only.pos = TRUE
+)
+tmp_de <- tmp_de[tmp_de$cluster != 'U-Vascular',]
+tmp_de$p_val_adj <- signif(tmp_de$p_val_adj, digits = 2)
+tmp_de$variable <- tmp_de$gene
+tmp_de$signif <- ifelse(test = tmp_de$p_val < 1e-10,
+                        yes = '*',
+                        no = '')
+
+DefaultAssay(vascular) <- 'RNA'
+avg_exp <- data.frame(t(ScaleData(vascular[['RNA']]@data, features = de_markers)))
+avg_exp <- cbind(avg_exp, 'vascular_subcluster' = as.character(vascular@meta.data[,c('vascular_subcluster')])) %>%
+  reshape2::melt(id.vars = c('vascular_subcluster')) %>%
+  group_by(vascular_subcluster, variable) %>%
+  summarise(avg.exp = mean(value))
+pct_exp <- data.frame(t(vascular[['RNA']]@counts[unlist(de_markers, use.names = FALSE),]))
+pct_exp <- cbind(pct_exp, 'vascular_subcluster' = as.character(vascular@meta.data[,c('vascular_subcluster')])) %>%
+  reshape2::melt(id.vars = c('vascular_subcluster')) %>%
+  group_by(vascular_subcluster, variable) %>%
+  summarise(pct.exp = mean(value > 0) * 100)
+my_cols <- rev(colorRampPalette(
+  colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
+
+
+# min_expr <- floor(min(avg_exp$avg.exp)*10)/10
+# max_exp <- ceiling(max(avg_exp$avg.exp)*10)/10
+min_expr <- -3
+max_expr <- 3
+de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
+  filter(vascular_subcluster != 'U-Vascular') %>%
+  mutate(vascular_subcluster = factor(vascular_subcluster, levels = rev(levels(vascular$vascular_subcluster)))) %>%
+  ggplot(mapping = aes(x = variable, y = vascular_subcluster)) +
+  geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
+  geom_text(data = tmp_de, mapping = aes(x = variable, y = cluster, label = signif),
+            size = 8, fontface = 'bold', nudge_y = -0.09, nudge_x = 0.01) +
+  # facet_grid(vascular_subcluster ~ ., drop = TRUE, switch = 'y') +
+  scale_size(range = c(0,12), limits = c(0,100)) +
+  scale_fill_gradientn(
+    colors = my_cols,
+    limits = c(min_expr, max_expr),
+    labels = c(min_expr, 0, max_expr),
+    breaks = c(min_expr, 0, max_expr),
+    na.value = my_cols[100]) +
+  scale_y_discrete(position = 'right') +
+  theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
+        axis.text.y = element_text(size = 14, color = 'black'),
+        strip.background = element_rect(fill = NA, colour = NA),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.placement = 'outside',
+        legend.background = element_rect(fill = NA),
+        legend.key = element_rect(fill = NA),
+        legend.text = element_text(size = 14, color = 'black', hjust = 0),
+        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
+        legend.margin = margin(0,0,0,0),
+        legend.box = 'vertical',
+        legend.position = 'right',
+        legend.spacing.x = unit(x = 2, units = 'mm'),
+        panel.border = element_rect(fill = NA, size = 1),
+        panel.background = element_rect(fill = NA)) +
+  guides(fill = guide_colorbar(title = 'z-score', 
+                               barwidth = 1.25,
+                               barheight = 4,
+                               frame.colour = 'black', 
+                               frame.linewidth = 1.25,
+                               ticks.colour = 'black', 
+                               ticks.linewidth = 1.25,
+                               title.position = 'left'), 
+         size = guide_legend(title = '% expression', 
+                             override.aes = list(fill = 'black'),
+                             title.position = 'left'))
+de_markers_dotplot
+ggsave(filename = './results/revision_figures/vascular_subcluster_markers_dotplot.tiff',
+       plot = de_markers_dotplot, device = 'tiff', height = 3.75, width = 7.25)
 
 
 
@@ -444,6 +543,84 @@ de_markers_seurat_heatmap <- expr_data %>%
 ggsave(filename = paste0(results_out, 'vascular_de_markers_heatmap.tiff'),
         plot = de_markers_seurat_heatmap, device = 'tiff',
         height = 11, width = 4.5)
+
+
+
+
+# DE markers heatmap (with significant p-values) ------------------------------
+
+Idents(vascular) <- 'vascular_subcluster'
+DefaultAssay(vascular) <- 'RNA'
+
+vascular_markers_seurat <- FindAllMarkers(object = vascular,
+                                          assay = 'RNA',
+                                          slot = 'data',
+                                          only.pos = TRUE,
+                                          min.pct = 0.2)
+write.table(x = vascular_markers_seurat,
+            file = paste0(results_out, 'vascular_markers_seurat.tsv'),
+            sep = '\t', row.names = FALSE)
+
+# Heatmap with gene results from Seurat
+vascular_markers_seurat <- read.table(file = paste0(results_out, 'vascular_markers_seurat.tsv'),
+                                      sep = '\t', header = TRUE)
+seurat_genes <- vascular_markers_seurat %>%
+  as.data.frame() %>%
+  group_by(cluster) %>%
+  top_n(n = 7, wt = avg_logFC) %>%
+  # top_n(n = 10, wt = -p.value) %>%
+  .[['gene']]
+seurat_genes <- c(seurat_genes, c('Cldn5','Podxl','Pecam1','Cspg4','Pdgfrb','Lum','Pdgfra'))
+expr_data <- t(ScaleData(object = vascular@assays$RNA@data[seurat_genes,])) %>%
+  cbind(vascular@meta.data[c('vascular_subcluster')]) %>%
+  group_by(vascular_subcluster) %>%
+  summarise(across(.cols = all_of(seurat_genes), .fns = mean)) %>%
+  reshape2::melt(id.vars = 'vascular_subcluster') %>%
+  mutate(variable = factor(variable, levels = rev(unique(variable)))) 
+
+expr_data$pval <- 1
+for (i in 1:nrow(vascular_markers_seurat)) {
+  tmp <- which(as.character(expr_data$vascular_subcluster) == as.character(vascular_markers_seurat$cluster[i]) &
+                 as.character(expr_data$variable) == as.character(vascular_markers_seurat$gene[i]))
+  expr_data$pval[tmp] <- vascular_markers_seurat$p_val_adj[i]
+}
+expr_data$significant <- ifelse(test = expr_data$pval < 1e-10,
+                                yes = '*',
+                                no = ' ')
+
+max_expr <- 3
+min_expr <- -3
+myColors <- rev(colorRampPalette(colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'), bias = 1.1)(100))
+
+de_markers_seurat_heatmap <- expr_data %>%
+  ggplot(mapping = aes(x = vascular_subcluster, y = variable)) +
+  geom_tile(mapping = aes(fill = value), color = 'black', size = 0.3) +
+  geom_text(mapping = aes(label = significant)) +
+  scale_fill_gradientn(colors = myColors,
+                       limits = c(min_expr, max_expr), 
+                       na.value = myColors[100],
+                       breaks = c(min_expr,0,max_expr)) +
+  scale_x_discrete(expand = c(0,0)) + 
+  scale_y_discrete(expand = c(0,0)) +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(size = 14, angle = 45, hjust = 1, color = 'black'),
+        axis.text.y = element_text(size = 12, color = 'black'),
+        legend.position = 'right',
+        legend.box.margin = margin(0,0,0,-2,unit='mm'),
+        legend.margin = margin(0,0,0,0),
+        legend.title = element_text(angle = 90, color = 'black', size = 14, vjust = 0.5, hjust = 0.5),
+        legend.text = element_text(size = 12, color = 'black')) +
+  guides(fill = guide_colorbar(title = 'z-score',
+                               title.position = 'left',
+                               frame.colour = 'black',
+                               ticks.colour = 'black',
+                               frame.linewidth = 1,
+                               ticks.linewidth = 1))
+de_markers_seurat_heatmap
+ggsave(filename = './results/revision_figures/vascular_de_markers_heatmap.tiff',
+       plot = de_markers_seurat_heatmap, device = 'tiff',
+       height = 11, width = 4.5)
 
 
 

@@ -1003,3 +1003,129 @@ mac_GO_mast_plot <- mac_GO_mast_plot1 + mac_GO_mast_plot2
 mac_GO_mast_plot
 ggsave(filename = paste0(results_out, 'macrophage_GO_result.tiff'),
        plot = mac_GO_mast_plot, device = 'tiff', height = 4, width = 13)
+
+
+
+# Figure for paper (functional annotation) ------------------------------------
+
+
+# Plot results by MAST DE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mac_go_mast <- readRDS(file = paste0(results_out, 'Macrophage_GOresults_MAST.rds')) 
+
+# Gather mac GO results
+mac_top_odds <- lapply(
+  X = mac_go_mast,
+  FUN = function(xx) {
+    tmp <- lapply(
+      X = xx,
+      FUN = function(yy) {
+        too_low <- yy[['GO_table']][['pvalue']] == '< 1e-30'
+        yy[['GO_table']][['pvalue']][too_low] <- 1e-30
+        tmp <- yy[['GO_table']] %>%
+          dplyr::mutate(pvalue = as.numeric(pvalue)) %>%
+          dplyr::filter(Significant > 3) %>%
+          dplyr::filter(pvalue < 1e-03) %>%
+          # dplyr::arrange(pvalue) %>%
+          dplyr::arrange(desc(odds_ratio)) %>%
+          dplyr::select(Term, pvalue, odds_ratio)
+        tmp <- tmp[1:15,]
+        tmp <- tmp[!is.na(tmp$Term),]
+        return(tmp)
+      }
+    )
+    names(tmp) <- names(xx)
+    return(tmp)
+  }
+)
+for (p in 1:length(mac_top_odds)) {
+  comp <- mac_top_odds[[p]]
+  for (c in 1:length(comp)) {
+    go_table <- comp[[c]]
+    go_table[['ontology']] <- names(mac_top_odds)[p]
+    go_table[['comparison']] <- names(comp)[c]
+    comp[[c]] <- go_table
+  }
+  mac_top_odds[[p]] <- comp
+}
+mac_top_odds <- unlist(mac_top_odds, recursive = FALSE, use.names = FALSE)
+mac_top_odds <- Reduce(f = rbind, x = mac_top_odds)
+mac_top_odds[['comparison']] <- factor(
+  x = mac_top_odds[['comparison']],
+  levels = unique(mac_top_odds[['comparison']])
+)
+mac_top_odds[['tmp_id']] <- paste(
+  mac_top_odds[['comparison']],
+  mac_top_odds[['Term']],
+  sep = '_'
+)
+
+mac_go_mast_df <- mac_top_odds %>%
+  mutate('log_odds' = log2(odds_ratio)) %>%
+  mutate('log_pval' = -log10(pvalue)) %>%
+  arrange(desc(log_pval))
+
+mac_GO_mast_plot1 <- mac_go_mast_df %>%
+  mutate('comparison' = plyr::mapvalues(
+    x = comparison,
+    from = c('up','down'),
+    to = c('Chemotaxis-Inducing Mac',
+           'Inflammatory Mac')
+  )) %>%
+  filter(grepl(pattern = 'Chemotaxis-Inducing Mac', x = comparison)) %>%
+  filter(ontology == 'BP') %>%
+  ggplot(mapping = aes(x = log_pval, y = reorder(tmp_id, log_pval))) +
+  geom_bar(fill = 'grey80', 
+           color = 'black', 
+           stat = 'identity') +
+  facet_wrap(. ~ comparison, scales = 'free_y', drop = TRUE, ncol = 2,
+             labeller = label_wrap_gen(width = 15)) +
+  scale_x_continuous(breaks = seq(0, 100, 5),
+                     limits = c(0, 15)) +
+  scale_y_discrete(labels = function(x) sub("[^*_]+_", "", x)) +
+  ylab(label = 'GO Term') +
+  xlab(label = 'log10(p-value)') +
+  theme(panel.background = element_rect(fill = NA, color = 'black'),
+        panel.border = element_rect(fill = NA, color = 'black'),
+        plot.title = element_text(size = 16, color = 'black'),
+        strip.text = element_text(size = 16, color = 'black'),
+        strip.background = element_rect(color = 'black'),
+        axis.title = element_text(size = 14, color = 'black'),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 12, color = 'black'),
+        legend.title = element_text(size = 14, color = 'black'),
+        legend.text = element_text(size = 12, color = 'black'))
+
+mac_GO_mast_plot2 <- mac_go_mast_df %>%
+  mutate('comparison' = plyr::mapvalues(
+    x = comparison,
+    from = c('up','down'),
+    to = c('Chemotaxis-Inducing Mac',
+           'Inflammatory Mac')
+  )) %>%
+  filter(grepl(pattern = 'Inflammatory Mac', x = comparison)) %>%
+  filter(ontology == 'BP') %>%
+  ggplot(mapping = aes(x = log_pval, y = reorder(tmp_id, log_pval))) +
+  geom_bar(fill = 'grey80', 
+           color = 'black', 
+           stat = 'identity') +
+  facet_wrap(. ~ comparison, scales = 'free_y', drop = TRUE, ncol = 2,
+             labeller = label_wrap_gen(width = 15)) +
+  scale_x_continuous(breaks = seq(0, 100, 5),
+                     limits = c(0, 15)) +
+  scale_y_discrete(labels = function(x) sub("[^*_]+_", "", x)) +
+  ylab(label = 'GO Term') +
+  xlab(label = 'log10(p-value)') +
+  theme(panel.background = element_rect(fill = NA, color = 'black'),
+        panel.border = element_rect(fill = NA, color = 'black'),
+        plot.title = element_text(size = 16, color = 'black'),
+        strip.text = element_text(size = 16, color = 'black'),
+        strip.background = element_rect(color = 'black'),
+        axis.title = element_text(size = 14, color = 'black'),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 12, color = 'black'),
+        legend.title = element_text(size = 14, color = 'black'),
+        legend.text = element_text(size = 12, color = 'black'))
+mac_GO_mast_plot <- mac_GO_mast_plot1 + mac_GO_mast_plot2
+mac_GO_mast_plot
+ggsave(filename = './results/revision_figures/functional_names/macrophage_GO_result.tiff',
+       plot = mac_GO_mast_plot, device = 'tiff', height = 4, width = 13)
