@@ -73,7 +73,7 @@ for(ii in 1:length(canonical_markers)) {
                                 'y_pos' = label_y),
               mapping = aes(x = x_pos, y = y_pos, label = gene),
               fontface = 'italic',
-              size = 6,
+              size = 7.5,
               hjust = 0) +
     scale_color_gradientn(colors = expr_colors,
                           breaks = c(0, max_expr),
@@ -87,7 +87,7 @@ for(ii in 1:length(canonical_markers)) {
           legend.position = c(0.875, 0.825), 
           legend.key.size = unit(0.25, units = 'cm'), 
           legend.spacing.x = unit(0.1, units = 'cm'),
-          legend.text = element_text(size = 12, color = 'black')) +
+          legend.text = element_text(size = 16, color = 'black')) +
     guides(color = guide_colorbar(frame.colour = 'black', 
                                   ticks = FALSE,
                                   barwidth = 0.8,
@@ -101,7 +101,7 @@ canonical_markers_umap_grid <- cowplot::plot_grid(
 )
 ggsave(filename = paste0(results_out, 'canonical_markers_umap.tiff'),
        plot = canonical_markers_umap_grid, device = 'tiff',
-       height = 24, width = 9)
+       height = 24, width = 9, dpi = 600)
 
 
 
@@ -219,10 +219,10 @@ umap_theme <- theme(panel.background = element_blank(),
                     axis.line = element_line(color = 'black'),
                     axis.text = element_blank(),
                     axis.ticks = element_blank(),
-                    axis.title = element_text(size = 16, color = 'black', face = 'bold'),
-                    legend.title = element_text(size = 14, color = 'black', face = 'bold'),
+                    axis.title = element_text(size = 16, color = 'black'),
+                    legend.title = element_text(size = 16, color = 'black'),
                     legend.key = element_rect(fill = NA, color = NA),
-                    legend.text = element_text(size = 14, color = 'black'))
+                    legend.text = element_text(size = 16, color = 'black', fam))
 
 # cell-type annotation UMAP
 celltype_counts <- table(sci$celltype)
@@ -251,7 +251,7 @@ celltype_split_umap <- FetchData(sci, vars = c('UMAP_1','UMAP_2','celltype','tim
   facet_wrap(. ~ time, ncol = 2) +
   scale_color_manual(values = sci_cols, breaks = names(celltype_label), label = celltype_label) +
   umap_theme +
-  theme(strip.text = element_text(size = 14, color = 'black')) +
+  theme(strip.text = element_text(size = 16, color = 'black')) +
   guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
 ggsave(filename = paste0(results_out, 'celltype_annotation_split_umap.tiff'),
        plot = celltype_split_umap, device = 'tiff', height = 6, width = 9)
@@ -303,21 +303,21 @@ de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
   scale_y_discrete(position = 'right') +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = 'black'),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = 'black', fontface = 'italic'),
         axis.text.y = element_text(size = 14, color = 'black'),
         strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, size = 16, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 14, color = 'black', hjust = 0),
+        legend.text = element_text(size = 16, color = 'black', hjust = 0),
         legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
         legend.margin = margin(5,0,10,0),
         legend.position = 'right',
         legend.spacing.x = unit(x = 2, units = 'mm'),
         panel.border = element_rect(fill = NA, size = 1),
         panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'Scaled\nexpression', 
+  guides(fill = guide_colorbar(title = 'z-score', 
                                barwidth = 1.25,
                                frame.colour = 'black', 
                                frame.linewidth = 1.25,
@@ -421,14 +421,14 @@ de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
   scale_y_discrete(position = 'right') +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = 'black'),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = 'black', face = 'italic'),
         axis.text.y = element_text(size = 14, color = 'black'),
         strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, size = 16, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 14, color = 'black', hjust = 0),
+        legend.text = element_text(size = 16, color = 'black', hjust = 0),
         legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
         legend.margin = margin(5,0,10,0),
         legend.position = 'right',
@@ -496,13 +496,13 @@ for(ii in 1:length(single_markers)) {
                                 'y_pos' = label_y),
               mapping = aes(x = x_pos, y = y_pos, label = gene),
               fontface = 'italic',
-              size = 4.5,
+              size = 5.5,
               hjust = 0) +
     labs(title = celltype) +
     scale_color_gradientn(colors = expr_colors,
                           breaks = c(0, max_expr),
                           limits = c(0, max_expr)) +
-    theme(plot.title = element_text(size = 14, color = 'black', face = 'bold'),
+    theme(plot.title = element_text(size = 16, color = 'black'),
           panel.background = element_rect(fill = NA, color = 'black'),
           panel.border = element_rect(fill = NA, color = 'black'),
           axis.title = element_blank(),
@@ -513,7 +513,7 @@ for(ii in 1:length(single_markers)) {
           legend.key.size = unit(0.25, units = 'cm'), 
           legend.background = element_rect(fill = NA),
           legend.spacing.x = unit(0.1, units = 'cm'),
-          legend.text = element_text(size = 10, color = 'black')) +
+          legend.text = element_text(size = 13, color = 'black')) +
     guides(color = guide_colorbar(frame.colour = 'black', 
                                   ticks = FALSE,
                                   barwidth = 0.8,
@@ -547,14 +547,14 @@ celltype_counts_plot <- celltype_counts %>%
   ylab(label = 'Number of cells') +
   facet_wrap(. ~ celltype, scales = 'free_y', ncol = 5) +
   scale_fill_manual(values = time_cols) +
-  theme(plot.title = element_text(size = 14, color = 'black', face = 'bold'),
+  theme(plot.title = element_text(size = 16, color = 'black'),
         panel.border = element_rect(fill = NA, color = 'black'),
         strip.text = element_text(size = 12),
         axis.title.x = element_blank(),
         axis.title.y = element_text(size = 12, color = 'black'),
         axis.text.x = element_text(angle = 45, hjust = 1, size = 10),
         axis.text.y = element_text(size = 10),
-        legend.title = element_text(size = 14, color = 'black'),
+        legend.title = element_text(size = 16, color = 'black'),
         legend.text = element_text(size = 12, color = 'black')) +
   guides(fill = guide_legend(title = 'Time after\ninjury'))
 ggsave(filename = paste0(results_out, 'celltype_counts.tiff'),

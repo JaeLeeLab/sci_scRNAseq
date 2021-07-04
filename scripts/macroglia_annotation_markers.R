@@ -80,7 +80,7 @@ for (ii in 1:length(unlist(addtl_markers, use.names = FALSE))) {
                                 'y_pos' = label_y),
               mapping = aes(x = x_pos, y = y_pos, label = gene),
               fontface = 'italic',
-              size = 7,
+              size = 6.5,
               hjust = 0) +
     scale_color_gradientn(colors = expr_colors,
                           breaks = c(0, max_expr),
@@ -95,7 +95,7 @@ for (ii in 1:length(unlist(addtl_markers, use.names = FALSE))) {
           legend.background = element_rect(fill = NA),
           legend.key.size = unit(0.25, units = 'cm'), 
           legend.spacing.x = unit(0.1, units = 'cm'),
-          legend.text = element_text(size = 12, color = 'black')) +
+          legend.text = element_text(size = 14, color = 'black')) +
     guides(color = guide_colorbar(frame.colour = 'black', 
                                   ticks = FALSE,
                                   barwidth = 0.8,
@@ -225,10 +225,10 @@ umap_theme <- theme(panel.background = element_blank(),
                     axis.line = element_line(color = 'black'),
                     axis.text = element_blank(),
                     axis.ticks = element_blank(),
-                    axis.title = element_text(size = 18, color = 'black', face = 'bold'),
-                    legend.title = element_text(size = 14, color = 'black', face = 'bold'),
+                    axis.title = element_text(size = 16, color = 'black'),
+                    legend.title = element_text(size = 16, color = 'black'),
                     legend.key = element_rect(fill = NA, color = NA),
-                    legend.text = element_text(size = 14, color = 'black'))
+                    legend.text = element_text(size = 16, color = 'black'))
 
 # cell-type annotation UMAP 
 macroglia_subcluster_counts <- table(macroglia$macroglia_subcluster)
@@ -263,112 +263,6 @@ macroglia_subcluster_split_umap <- FetchData(macroglia, vars = c('UMAP_1','UMAP_
   guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
 ggsave(filename = paste0(results_out, 'macroglia_subcluster_annotation_split_umap.tiff'),
        plot = macroglia_subcluster_split_umap, device = 'tiff', height = 6, width = 9)
-
-
-
-
-
-
-
-# DE markers dot plot -----------------------------------------------------
-
-# Calculate DE
-de_genes <- FindAllMarkers(object = macroglia,
-                           assay = 'RNA',
-                           logfc.threshold = 0.5,
-                           only.pos = TRUE)
-# Differences between Ependymal-A and Ependymal-B
-ependymalA_ependymalB <- FindMarkers(macroglia,
-                                     ident.1 = 'Ependymal-A',
-                                     ident.2 = 'Ependymal-B',
-                                     assay = 'RNA',
-                                     logfc.threshold = 0.5)
-# Differences between OPC-A and OPC-B
-opcA_opcB <- FindMarkers(macroglia,
-                         ident.1 = 'OPC-A',
-                         ident.2 = 'OPC-B',
-                         assay = 'RNA',
-                         logfc.threshold = 0.25)
-union(de_genes$gene[de_genes$cluster == 'OPC-B'], rownames(opcA_opcB)[opcA_opcB$avg_logFC < 0])
-
-
-# Select marker genes
-de_markers <- c('Pan-Ependymal' = 'Foxj1',
-                'Ependymal-A' = 'Tmem212',
-                'Ependymal-B' = 'Rbp1',
-                'Astroependymal' = 'Crym',
-                'Astrocyte' = 'Agt',
-                'OPC-A1' = 'Tnr',
-                'OPC-B' = 'Tnc',
-                'Div-OPC' = 'Cdk1',
-                'Pre-Oligo' = 'Bmp4',
-                'Oligodendrocyte' = 'Mag')
-
-DefaultAssay(macroglia) <- 'RNA'
-avg_exp <- data.frame(t(ScaleData(macroglia[['RNA']]@data, features = de_markers)))
-avg_exp <- cbind(avg_exp, 'macroglia_subcluster' = as.character(macroglia@meta.data[,c('macroglia_subcluster')])) %>%
-  reshape2::melt(id.vars = c('macroglia_subcluster')) %>%
-  group_by(macroglia_subcluster, variable) %>%
-  summarise(avg.exp = mean(value))
-pct_exp <- data.frame(t(macroglia[['RNA']]@counts[unlist(de_markers, use.names = FALSE),]))
-pct_exp <- cbind(pct_exp, 'macroglia_subcluster' = as.character(macroglia@meta.data[,c('macroglia_subcluster')])) %>%
-  reshape2::melt(id.vars = c('macroglia_subcluster')) %>%
-  group_by(macroglia_subcluster, variable) %>%
-  summarise(pct.exp = mean(value > 0) * 100)
-
-max_expr <- 3
-min_expr <- floor(min(avg_exp$avg.exp)*10)/10
-myColors <- rev(colorRampPalette(colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
-myBreaks <- c(seq(min_expr, 0, length.out = 50),
-              seq(max_expr/100, max_expr, length.out = 50))
-
-de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
-  filter(macroglia_subcluster != 'U-macroglia') %>%
-  mutate(macroglia_subcluster = factor(macroglia_subcluster, levels = rev(levels(macroglia$macroglia_subcluster)))) %>%
-  ggplot(mapping = aes(x = variable, y = macroglia_subcluster)) +
-  geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
-  scale_size(range = c(0,10), limits = c(0,100)) +
-  scale_fill_gradientn(
-    colors = myColors,
-    values = scales::rescale(x = myBreaks, to = c(0,1)),
-    limits = c(min_expr, max_expr), 
-    na.value = myColors[100],
-    breaks = c(min_expr, 0, max_expr)) +
-  scale_y_discrete(position = 'right') +
-  theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
-        strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
-        strip.placement = 'outside',
-        legend.background = element_rect(fill = NA),
-        legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 12, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
-        legend.box.margin = margin(10,0,0,0,unit = 'mm'),
-        legend.margin = margin(0,0,0,0, unit = 'mm'),
-        legend.box = 'vertical',
-        legend.position = 'right',
-        legend.spacing.x = unit(x = 2, units = 'mm'),
-        panel.border = element_rect(fill = NA, size = 1),
-        panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'Scaled\nexpression', 
-                               barwidth = 1.25,
-                               frame.colour = 'black', 
-                               frame.linewidth = 1.25,
-                               ticks.colour = 'black', 
-                               ticks.linewidth = 1.25,
-                               title.position = 'left'), 
-         size = guide_legend(title = '% expression', 
-                             override.aes = list(fill = 'black'),
-                             title.position = 'left'))
-de_markers_dotplot
-ggsave(filename = paste0(results_out, 'macroglia_subcluster_markers_dotplot.tiff'),
-       plot = de_markers_dotplot, device = 'tiff', height = 3.75, width = 6.75)
-
-
 
 
 
@@ -455,15 +349,15 @@ de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
   theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 12, color = 'black', face = 'italic'),
+        axis.text.y = element_text(size = 12, color = 'black'),
         strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, size = 20, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
         legend.text = element_text(size = 12, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
+        legend.title = element_text(size = 12, angle = 90, color = 'black', hjust = 0.5),
         legend.box.margin = margin(10,0,0,0,unit = 'mm'),
         legend.margin = margin(0,0,0,0, unit = 'mm'),
         legend.box = 'vertical',
@@ -482,7 +376,7 @@ de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
                              override.aes = list(fill = 'black'),
                              title.position = 'left'))
 de_markers_dotplot
-ggsave(filename = './results/revision_figures/macroglia_subcluster_markers_dotplot.tiff',
+ggsave(filename = paste0(results_out, 'macroglia_subcluster_markers_dotplot.tiff'),
        plot = de_markers_dotplot, device = 'tiff', height = 3.75, width = 6.75)
 
 
@@ -626,7 +520,7 @@ oligo_prop <- counts %>%
   scale_fill_manual(values = macroglia_cols) +
   ylab('Prop. of cells') + 
   theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black'),
         axis.line = element_line(size = 1), 
         panel.background = element_rect(fill = NA), 
@@ -653,7 +547,7 @@ oligo_counts <- counts %>%
   scale_fill_manual(values = macroglia_cols) +
   ylab(label = '# of cells') +
   theme(axis.title.x = element_blank(),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
         axis.text.y = element_text(size = 12, color = 'black'),
         legend.position = 'none', 
@@ -700,7 +594,7 @@ ependymal_prop <- counts %>%
   scale_fill_manual(values = macroglia_cols) +
   ylab('Prop. of cells') + 
   theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black'),
         axis.line = element_line(size = 1), 
         panel.background = element_rect(fill = NA), 
@@ -727,7 +621,7 @@ ependymal_counts <- counts %>%
   scale_fill_manual(values = macroglia_cols) +
   ylab(label = '# of cells') +
   theme(axis.title.x = element_blank(),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
         axis.text.y = element_text(size = 12, color = 'black'),
         legend.position = 'none', 
@@ -971,6 +865,7 @@ cilia_heatmap <- Heatmap(
   row_dend_width = unit(x = 15, units = 'mm'),
   column_names_rot = 45,
   rect_gp = gpar(col = 'black'),
+  row_names_gp = gpar(fontface = 'italic'),
   heatmap_legend_param = list(
     title = 'z-score',
     title_gp = gpar(fontsize = 12),
@@ -994,75 +889,75 @@ dev.off()
 
 
 
-# Ependymal cilia heatmap with old list of genes --------------------------------
-
-cilia.genes <- c(paste0('Cfap', c(20,36,43,44,45,52,53,54,69,70,77,100,126,161,206)),'Ccdc180','Odf3b','Fam183b','Tekt1','Dnah12','Sntn','Dnah6','Tmem107','Acta2','Stmn2','Tmsb10')
-tmp1 <- FindMarkers(macroglia, 'Astrocyte', ident.2 = paste0('Ependymal-', LETTERS[1:2]), assay = 'RNA', slot = 'data', only.pos = TRUE)
-tmp2 <- FindMarkers(macroglia, 'Astroependymal', ident.2 = paste0('Ependymal-', LETTERS[1:2]), assay = 'RNA', slot = 'data', only.pos = TRUE)
-astrocyte.genes <- c('Gfap','Agt','Ntsr2','Acsbg1','Aldh1l1','Aqp4','Slc6a11','Slc7a10','Fgfr3')
-astroependymal.genes <- c('Ccnd1','S100a10','Hbegf','Stmn2','Timp1','Vim','Hspb1','Crym')
-oligo.genes <- c('Sox10','Olig1','Olig2','Ascl1','Bmp4','Mycl','Plp1','Mog','Mbp','Sox9','Mki67','Top2a')
-tmp.thres <- 0.4
-shared.genes <- intersect(rownames(tmp1)[tmp1$p_val_adj < 1e-10 & tmp1$avg_logFC > tmp.thres], rownames(tmp2)[tmp1$p_val_adj < 1e-10 & tmp1$avg_logFC > tmp.thres])
-
-marker.genes <- c(cilia.genes, astrocyte.genes, astroependymal.genes, oligo.genes, shared.genes)
-marker.genes <- unique(marker.genes)
-all_genes <- marker.genes
-
-expr_data <- t(ScaleData(object = macroglia[['RNA']]@data[all_genes,], 
-                         scale.max = 4)) %>%
-  cbind(macroglia@meta.data[c('macroglia_subcluster')]) %>%
-  group_by(macroglia_subcluster) %>%
-  summarise(across(.cols = all_of(all_genes), .fns = mean)) %>%
-  tibble::column_to_rownames(var = 'macroglia_subcluster')
-expr_data <- as.matrix(x = expr_data)
-
-cilia_heatmap <- Heatmap(
-  matrix = expr_data,
-  clustering_method_columns = 'ward.D2',
-  clustering_method_rows = 'ward.D2',
-  col = rev(
-    colorRampPalette(
-      colors = RColorBrewer::brewer.pal(
-        n = 9,
-        name = 'RdYlBu'
-      ),
-      bias = 0.65
-    )(100)
-  ),
-  border = TRUE,
-  clustering_distance_rows = 'pearson',
-  clustering_distance_columns = 'pearson',
-  column_dend_height = unit(x = 15, units = 'mm'),
-  row_dend_width = unit(x = 15, units = 'mm'),
-  # column_names_rot = 45,
-  rect_gp = gpar(col = 'black'),
-  heatmap_legend_param = list(
-    title = 'Scaled Expression',
-    title_gp = gpar(fontsize = 12),
-    title_position = 'topcenter',
-    labels = c('Low', 0, 'High'),
-    at = c(min(expr_data), 0, max(expr_data)),
-    labels_gp = gpar(fontsize = 10),
-    legend_height = unit(2.5, units = 'cm'),
-    grid_width = unit(0.5, units = 'cm'),
-    border = 'black',
-    title_gap = unit(1, units = 'cm'),
-    direction = 'horizontal'),
-  # column_km = 4,
-)
-draw(cilia_heatmap, heatmap_legend_side = 'bottom')
-tiff(file = paste0(results_out, 'astroependymal_cilia_heatmap_oldMethod.tiff'),
-    height = 5, width = 20, res = 420, units = 'in')
-draw(cilia_heatmap, heatmap_legend_side = 'bottom')
-dev.off()
-png(filename = paste0(results_out, 'astroependymal_cilia_heatmap_oldMethod.png'),
-    height = 5, width = 20, res = 420, units = 'in')
-draw(cilia_heatmap, heatmap_legend_side = 'bottom')
-dev.off()
-
-
-
+# # Ependymal cilia heatmap with old list of genes --------------------------------
+# 
+# cilia.genes <- c(paste0('Cfap', c(20,36,43,44,45,52,53,54,69,70,77,100,126,161,206)),'Ccdc180','Odf3b','Fam183b','Tekt1','Dnah12','Sntn','Dnah6','Tmem107','Acta2','Stmn2','Tmsb10')
+# tmp1 <- FindMarkers(macroglia, 'Astrocyte', ident.2 = paste0('Ependymal-', LETTERS[1:2]), assay = 'RNA', slot = 'data', only.pos = TRUE)
+# tmp2 <- FindMarkers(macroglia, 'Astroependymal', ident.2 = paste0('Ependymal-', LETTERS[1:2]), assay = 'RNA', slot = 'data', only.pos = TRUE)
+# astrocyte.genes <- c('Gfap','Agt','Ntsr2','Acsbg1','Aldh1l1','Aqp4','Slc6a11','Slc7a10','Fgfr3')
+# astroependymal.genes <- c('Ccnd1','S100a10','Hbegf','Stmn2','Timp1','Vim','Hspb1','Crym')
+# oligo.genes <- c('Sox10','Olig1','Olig2','Ascl1','Bmp4','Mycl','Plp1','Mog','Mbp','Sox9','Mki67','Top2a')
+# tmp.thres <- 0.4
+# shared.genes <- intersect(rownames(tmp1)[tmp1$p_val_adj < 1e-10 & tmp1$avg_logFC > tmp.thres], rownames(tmp2)[tmp1$p_val_adj < 1e-10 & tmp1$avg_logFC > tmp.thres])
+# 
+# marker.genes <- c(cilia.genes, astrocyte.genes, astroependymal.genes, oligo.genes, shared.genes)
+# marker.genes <- unique(marker.genes)
+# all_genes <- marker.genes
+# 
+# expr_data <- t(ScaleData(object = macroglia[['RNA']]@data[all_genes,], 
+#                          scale.max = 4)) %>%
+#   cbind(macroglia@meta.data[c('macroglia_subcluster')]) %>%
+#   group_by(macroglia_subcluster) %>%
+#   summarise(across(.cols = all_of(all_genes), .fns = mean)) %>%
+#   tibble::column_to_rownames(var = 'macroglia_subcluster')
+# expr_data <- as.matrix(x = expr_data)
+# 
+# cilia_heatmap <- Heatmap(
+#   matrix = expr_data,
+#   clustering_method_columns = 'ward.D2',
+#   clustering_method_rows = 'ward.D2',
+#   col = rev(
+#     colorRampPalette(
+#       colors = RColorBrewer::brewer.pal(
+#         n = 9,
+#         name = 'RdYlBu'
+#       ),
+#       bias = 0.65
+#     )(100)
+#   ),
+#   border = TRUE,
+#   clustering_distance_rows = 'pearson',
+#   clustering_distance_columns = 'pearson',
+#   column_dend_height = unit(x = 15, units = 'mm'),
+#   row_dend_width = unit(x = 15, units = 'mm'),
+#   # column_names_rot = 45,
+#   rect_gp = gpar(col = 'black'),
+#   heatmap_legend_param = list(
+#     title = 'Scaled Expression',
+#     title_gp = gpar(fontsize = 12),
+#     title_position = 'topcenter',
+#     labels = c('Low', 0, 'High'),
+#     at = c(min(expr_data), 0, max(expr_data)),
+#     labels_gp = gpar(fontsize = 10),
+#     legend_height = unit(2.5, units = 'cm'),
+#     grid_width = unit(0.5, units = 'cm'),
+#     border = 'black',
+#     title_gap = unit(1, units = 'cm'),
+#     direction = 'horizontal'),
+#   # column_km = 4,
+# )
+# draw(cilia_heatmap, heatmap_legend_side = 'bottom')
+# tiff(file = paste0(results_out, 'astroependymal_cilia_heatmap_oldMethod.tiff'),
+#     height = 5, width = 20, res = 420, units = 'in')
+# draw(cilia_heatmap, heatmap_legend_side = 'bottom')
+# dev.off()
+# png(filename = paste0(results_out, 'astroependymal_cilia_heatmap_oldMethod.png'),
+#     height = 5, width = 20, res = 420, units = 'in')
+# draw(cilia_heatmap, heatmap_legend_side = 'bottom')
+# dev.off()
+# 
+# 
+# 
 # Abundance analysis ------------------------------------------------------
 
 time_cols <- RColorBrewer::brewer.pal(n = 4, name = 'Spectral')
@@ -1082,7 +977,7 @@ macroglia_subcluster_counts_plot <- macroglia_subcluster_counts %>%
   ylab(label = 'Number of cells') +
   facet_wrap(. ~ macroglia_subcluster, scales = 'free_y', ncol = 5) +
   scale_fill_manual(values = time_cols) +
-  theme(plot.title = element_text(size = 14, color = 'black', face = 'bold'),
+  theme(plot.title = element_text(size = 14, color = 'black'),
         panel.border = element_rect(fill = NA, color = 'black'),
         strip.text = element_text(size = 12),
         axis.title.x = element_blank(),
@@ -1180,6 +1075,11 @@ ggsave(filename = paste0(results_out, 'OPC-A_vs_OPC-B_DEgenes_umap.tiff'),
        height = 5, width = 12)
 
 
+
+
+# Transcription factor violin plot ----------------------------------------
+
+
 # Violin plots of transcription factors to confirm OPC identity
 transcription_factors <- c('Ascl1','Id2','Id4','Olig1','Olig2','Nkx2-2','Sox9','Sox10','Myt1','Foxj1','Nog')
 DefaultAssay(macroglia) <- 'RNA'
@@ -1194,13 +1094,13 @@ transcription_factor_vlnplot <-
   scale_fill_manual(values = macroglia_cols) +
   scale_y_continuous(breaks = seq(0, 10, 1), position = 'right') +
   ylab(label = 'Normalized expression') +
-  theme(axis.text.x = element_text(angle = 45, size = 14, hjust = 1),
+  theme(axis.text.x = element_text(angle = 45, size = 12, hjust = 1),
         panel.background = element_rect(fill = NA),
         panel.border = element_rect(color = 'black', fill = NA),
         axis.title.x = element_blank(),
-        axis.title.y.right = element_text(size = 14, color = 'black', margin = margin(0, 0, 0, 3, unit = 'mm')),
+        axis.title.y.right = element_text(size = 12, color = 'black', margin = margin(0, 0, 0, 3, unit = 'mm')),
         axis.text.y = element_text(size = 12, color = 'black'),
-        strip.text.y.left = element_text(size = 14, color = 'black', angle = 0),
+        strip.text.y.left = element_text(size = 12, color = 'black', angle = 0, face =),
         legend.position = 'none',
         plot.margin = margin(0, 1, 0, 1, unit = 'cm'))
 transcription_factor_vlnplot

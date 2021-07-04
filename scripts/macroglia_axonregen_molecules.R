@@ -49,218 +49,218 @@ permissive_ligands <- permissive_ligands[permissive_ligands %in% rownames(macrog
 
 
 
-# Axon regen molecules heatmap (split by time) ----------------------------------------
-
-
-DefaultAssay(macroglia) <- 'RNAcorrected'
-Idents(macroglia) <- 'macroglia_subcluster'
-
-# Preset values
-macroglia_cols <- c('Ependymal-A' = '#800000',
-                    'Ependymal-B' = '#e6194b',
-                    'Astroependymal' = '#f58231',
-                    'Astrocyte' = 'goldenrod',
-                    'OPC-A' = '#3cb44b',
-                    'OPC-B' = '#008080',
-                    'Div-OPC' = '#4363d8',
-                    'Pre-Oligo' = '#911eb4',
-                    'Oligodendrocyte' = '#f032e6')
-time_cols <- RColorBrewer::brewer.pal(n = 4, name = 'Spectral')
-names(time_cols) <- c('Uninjured','1dpi','3dpi','7dpi')
-axon_cols <- c('Inhibitory' = 'indianred', 'Permissive' = 'dodgerblue')
-
-
-# Select which genes to annotate
-label_genes <- c(inhibitory_ligands[1:5], permissive_ligands[1:5])
-
-# Extract scaled expression values
-expr_data <- t(ScaleData(
-  object = macroglia[['RNAcorrected']]@data, 
-  features = c(inhibitory_ligands, permissive_ligands),
-  scale.max = 3
-))
-
-# metadata
-macroglia_meta <- macroglia@meta.data[c('macroglia_subcluster','time')]
-
-# Merge metadata and exprs values, then calculate avg across cell/time
-axon_data <- cbind(expr_data, macroglia_meta) %>%
-  group_by(macroglia_subcluster, time) %>%
-  summarise(across(.fns = mean))
-
-# Remove groups with low counts (e.g. Uninjured Macrophage-B)
-cell_count <- table(macroglia@meta.data[['macroglia_subcluster']],
-                    macroglia@meta.data[['time']])
-cell_prop <- prop.table(cell_count, margin = 1)
-remove_cell <- cell_prop < 0.02
-remove_rows <- c()
-for (i in 1:nrow(axon_data)) {
-  if (remove_cell[axon_data$macroglia_subcluster[i], axon_data$time[i]]) {
-    remove_rows <- c(remove_rows, i)
-  }
-}
-axon_data <- axon_data[-remove_rows,]
-
-# Create new ID of celltype + time
-axon_data[['id']] <- paste(axon_data[['macroglia_subcluster']],
-                           axon_data[['time']],
-                           sep = '_')
-
-# Cell-level annotations
-axon_cell_anno <- rowAnnotation(
-  'Subcluster' = axon_data[['macroglia_subcluster']],
-  'Time' = axon_data[['time']],
-  col = list('Subcluster' = macroglia_cols,
-             'Time' = time_cols)
-)
-
-# Gene-level annotations
-axon_gene_anno <- HeatmapAnnotation(
-  'Axon-regen effect' = c(rep('Inhibitory', length(inhibitory_ligands)), rep('Permissive', length(permissive_ligands))),
-  col = list('Axon-regen effect' = axon_cols),
-  'Axon-regen effect' = anno_mark(
-    at = match(label_genes, colnames(axon_data)),
-    labels = label_genes,
-    side = 'right',
-    labels_gp = gpar(fontsize = 10)
-  )
-)
-
-# convert to matrix
-axon_mat <- axon_data[!names(axon_data) %in% c('macroglia_subcluster','time')] %>%
-  tibble::column_to_rownames(var = 'id') %>%
-  as.matrix()
-
-
-# Generate heatmap
-axon_split_heatmap <- Heatmap(
-  matrix = axon_mat,
-  col = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 10, name = "RdYlBu")), bias = 1.6)(100),
-  heatmap_legend_param = list(title = 'Scaled\nExpression',
-                              title_gp = gpar(fontsize = 12),
-                              title_position = 'leftcenter-rot',
-                              labels = c('Low',0, 'High'),
-                              at = c(min(expr_data), 0, max(expr_data)),
-                              labels_gp = gpar(fontsize = 10),
-                              legend_height = unit(2.5, units = 'cm'),
-                              grid_width = unit(0.5, units = 'cm'),
-                              border = 'black',
-                              title_gap = unit(1, units = 'cm'),
-                              direction = 'vertical'),
-  use_raster = TRUE,
-  # cluster_columns = FALSE,
-  top_annotation = axon_gene_anno,
-  right_annotation = axon_cell_anno
-)
-
-# save
-tiff(filename = paste0(results_out, 'macroglia_axonregen_timeSplit_heatmap.tiff'),
-     height = 8, width = 14, units = 'in', res = 440)
-axon_split_heatmap
-dev.off()
-
-
-
-
-
-
-# Inhibitory molecules heatmap (split by time) ----------------------------------------
-
-
-DefaultAssay(macroglia) <- 'RNAcorrected'
-Idents(macroglia) <- 'macroglia_subcluster'
-
-# Preset values
-macroglia_cols <- c('Ependymal-A' = '#800000',
-                    'Ependymal-B' = '#e6194b',
-                    'Astroependymal' = '#f58231',
-                    'Astrocyte' = 'goldenrod',
-                    'OPC-A' = '#3cb44b',
-                    'OPC-B' = '#008080',
-                    'Div-OPC' = '#4363d8',
-                    'Pre-Oligo' = '#911eb4',
-                    'Oligodendrocyte' = '#f032e6')
-time_cols <- RColorBrewer::brewer.pal(n = 4, name = 'Spectral')
-names(time_cols) <- c('Uninjured','1dpi','3dpi','7dpi')
-axon_cols <- c('Inhibitory' = 'indianred', 'Permissive' = 'dodgerblue')
-
-
-# Extract scaled expression values
-expr_data <- t(ScaleData(
-  object = macroglia[['RNAcorrected']]@data, 
-  features = c(inhibitory_ligands),
-  scale.max = 3
-))
-
-# metadata
-macroglia_meta <- macroglia@meta.data[c('macroglia_subcluster','time')]
-
-# Merge metadata and exprs values, then calculate avg across cell/time
-axon_data <- cbind(expr_data, macroglia_meta) %>%
-  group_by(macroglia_subcluster, time) %>%
-  summarise(across(.fns = mean))
-
-# Remove groups with low counts (e.g. Uninjured astroependymal)
-cell_count <- table(macroglia@meta.data[['macroglia_subcluster']],
-                    macroglia@meta.data[['time']])
-cell_prop <- prop.table(cell_count, margin = 1)
-remove_cell <- cell_prop < 0.02
-remove_rows <- c()
-for (i in 1:nrow(axon_data)) {
-  if (remove_cell[axon_data$macroglia_subcluster[i], axon_data$time[i]]) {
-    remove_rows <- c(remove_rows, i)
-  }
-}
-axon_data <- axon_data[-remove_rows,]
-
-# Create new ID of celltype + time
-axon_data[['id']] <- paste(axon_data[['macroglia_subcluster']],
-                           axon_data[['time']],
-                           sep = '_')
-
-# Cell-level annotations
-axon_cell_anno <- rowAnnotation(
-  'Subcluster' = axon_data[['macroglia_subcluster']],
-  'Time' = axon_data[['time']],
-  col = list('Subcluster' = macroglia_cols,
-             'Time' = time_cols)
-)
-
-
-# convert to matrix
-axon_mat <- axon_data[!names(axon_data) %in% c('macroglia_subcluster','time')] %>%
-  tibble::column_to_rownames(var = 'id') %>%
-  as.matrix()
-
-
-# Generate heatmap
-axon_split_heatmap <- Heatmap(
-  matrix = axon_mat,
-  col = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 10, name = "RdYlBu")), bias = 1.6)(100),
-  heatmap_legend_param = list(title = 'Scaled\nExpression',
-                              title_gp = gpar(fontsize = 12),
-                              title_position = 'leftcenter-rot',
-                              labels = c('Low',0, 'High'),
-                              at = c(min(expr_data), 0, max(expr_data)),
-                              labels_gp = gpar(fontsize = 10),
-                              legend_height = unit(2.5, units = 'cm'),
-                              grid_width = unit(0.5, units = 'cm'),
-                              border = 'black',
-                              title_gap = unit(1, units = 'cm'),
-                              direction = 'vertical'),
-  use_raster = TRUE,
-  right_annotation = axon_cell_anno
-)
-
-# save
-tiff(filename = paste0(results_out, 'macroglia_axonregeninhibitory_timeSplit_heatmap.tiff'),
-     height = 8, width = 8, units = 'in', res = 440)
-axon_split_heatmap
-dev.off()
-
-
-
-
+# # Axon regen molecules heatmap (split by time) ----------------------------------------
+# 
+# 
+# DefaultAssay(macroglia) <- 'RNAcorrected'
+# Idents(macroglia) <- 'macroglia_subcluster'
+# 
+# # Preset values
+# macroglia_cols <- c('Ependymal-A' = '#800000',
+#                     'Ependymal-B' = '#e6194b',
+#                     'Astroependymal' = '#f58231',
+#                     'Astrocyte' = 'goldenrod',
+#                     'OPC-A' = '#3cb44b',
+#                     'OPC-B' = '#008080',
+#                     'Div-OPC' = '#4363d8',
+#                     'Pre-Oligo' = '#911eb4',
+#                     'Oligodendrocyte' = '#f032e6')
+# time_cols <- RColorBrewer::brewer.pal(n = 4, name = 'Spectral')
+# names(time_cols) <- c('Uninjured','1dpi','3dpi','7dpi')
+# axon_cols <- c('Inhibitory' = 'indianred', 'Permissive' = 'dodgerblue')
+# 
+# 
+# # Select which genes to annotate
+# label_genes <- c(inhibitory_ligands[1:5], permissive_ligands[1:5])
+# 
+# # Extract scaled expression values
+# expr_data <- t(ScaleData(
+#   object = macroglia[['RNAcorrected']]@data, 
+#   features = c(inhibitory_ligands, permissive_ligands),
+#   scale.max = 3
+# ))
+# 
+# # metadata
+# macroglia_meta <- macroglia@meta.data[c('macroglia_subcluster','time')]
+# 
+# # Merge metadata and exprs values, then calculate avg across cell/time
+# axon_data <- cbind(expr_data, macroglia_meta) %>%
+#   group_by(macroglia_subcluster, time) %>%
+#   summarise(across(.fns = mean))
+# 
+# # Remove groups with low counts (e.g. Uninjured Macrophage-B)
+# cell_count <- table(macroglia@meta.data[['macroglia_subcluster']],
+#                     macroglia@meta.data[['time']])
+# cell_prop <- prop.table(cell_count, margin = 1)
+# remove_cell <- cell_prop < 0.02
+# remove_rows <- c()
+# for (i in 1:nrow(axon_data)) {
+#   if (remove_cell[axon_data$macroglia_subcluster[i], axon_data$time[i]]) {
+#     remove_rows <- c(remove_rows, i)
+#   }
+# }
+# axon_data <- axon_data[-remove_rows,]
+# 
+# # Create new ID of celltype + time
+# axon_data[['id']] <- paste(axon_data[['macroglia_subcluster']],
+#                            axon_data[['time']],
+#                            sep = '_')
+# 
+# # Cell-level annotations
+# axon_cell_anno <- rowAnnotation(
+#   'Subcluster' = axon_data[['macroglia_subcluster']],
+#   'Time' = axon_data[['time']],
+#   col = list('Subcluster' = macroglia_cols,
+#              'Time' = time_cols)
+# )
+# 
+# # Gene-level annotations
+# axon_gene_anno <- HeatmapAnnotation(
+#   'Axon-regen effect' = c(rep('Inhibitory', length(inhibitory_ligands)), rep('Permissive', length(permissive_ligands))),
+#   col = list('Axon-regen effect' = axon_cols),
+#   'Axon-regen effect' = anno_mark(
+#     at = match(label_genes, colnames(axon_data)),
+#     labels = label_genes,
+#     side = 'right',
+#     labels_gp = gpar(fontsize = 10)
+#   )
+# )
+# 
+# # convert to matrix
+# axon_mat <- axon_data[!names(axon_data) %in% c('macroglia_subcluster','time')] %>%
+#   tibble::column_to_rownames(var = 'id') %>%
+#   as.matrix()
+# 
+# 
+# # Generate heatmap
+# axon_split_heatmap <- Heatmap(
+#   matrix = axon_mat,
+#   col = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 10, name = "RdYlBu")), bias = 1.6)(100),
+#   heatmap_legend_param = list(title = 'Scaled\nExpression',
+#                               title_gp = gpar(fontsize = 12),
+#                               title_position = 'leftcenter-rot',
+#                               labels = c('Low',0, 'High'),
+#                               at = c(min(expr_data), 0, max(expr_data)),
+#                               labels_gp = gpar(fontsize = 10),
+#                               legend_height = unit(2.5, units = 'cm'),
+#                               grid_width = unit(0.5, units = 'cm'),
+#                               border = 'black',
+#                               title_gap = unit(1, units = 'cm'),
+#                               direction = 'vertical'),
+#   use_raster = TRUE,
+#   # cluster_columns = FALSE,
+#   top_annotation = axon_gene_anno,
+#   right_annotation = axon_cell_anno
+# )
+# 
+# # save
+# tiff(filename = paste0(results_out, 'macroglia_axonregen_timeSplit_heatmap.tiff'),
+#      height = 8, width = 14, units = 'in', res = 440)
+# axon_split_heatmap
+# dev.off()
+# 
+# 
+# 
+# 
+# 
+# 
+# # Inhibitory molecules heatmap (split by time) ----------------------------------------
+# 
+# 
+# DefaultAssay(macroglia) <- 'RNAcorrected'
+# Idents(macroglia) <- 'macroglia_subcluster'
+# 
+# # Preset values
+# macroglia_cols <- c('Ependymal-A' = '#800000',
+#                     'Ependymal-B' = '#e6194b',
+#                     'Astroependymal' = '#f58231',
+#                     'Astrocyte' = 'goldenrod',
+#                     'OPC-A' = '#3cb44b',
+#                     'OPC-B' = '#008080',
+#                     'Div-OPC' = '#4363d8',
+#                     'Pre-Oligo' = '#911eb4',
+#                     'Oligodendrocyte' = '#f032e6')
+# time_cols <- RColorBrewer::brewer.pal(n = 4, name = 'Spectral')
+# names(time_cols) <- c('Uninjured','1dpi','3dpi','7dpi')
+# axon_cols <- c('Inhibitory' = 'indianred', 'Permissive' = 'dodgerblue')
+# 
+# 
+# # Extract scaled expression values
+# expr_data <- t(ScaleData(
+#   object = macroglia[['RNAcorrected']]@data, 
+#   features = c(inhibitory_ligands),
+#   scale.max = 3
+# ))
+# 
+# # metadata
+# macroglia_meta <- macroglia@meta.data[c('macroglia_subcluster','time')]
+# 
+# # Merge metadata and exprs values, then calculate avg across cell/time
+# axon_data <- cbind(expr_data, macroglia_meta) %>%
+#   group_by(macroglia_subcluster, time) %>%
+#   summarise(across(.fns = mean))
+# 
+# # Remove groups with low counts (e.g. Uninjured astroependymal)
+# cell_count <- table(macroglia@meta.data[['macroglia_subcluster']],
+#                     macroglia@meta.data[['time']])
+# cell_prop <- prop.table(cell_count, margin = 1)
+# remove_cell <- cell_prop < 0.02
+# remove_rows <- c()
+# for (i in 1:nrow(axon_data)) {
+#   if (remove_cell[axon_data$macroglia_subcluster[i], axon_data$time[i]]) {
+#     remove_rows <- c(remove_rows, i)
+#   }
+# }
+# axon_data <- axon_data[-remove_rows,]
+# 
+# # Create new ID of celltype + time
+# axon_data[['id']] <- paste(axon_data[['macroglia_subcluster']],
+#                            axon_data[['time']],
+#                            sep = '_')
+# 
+# # Cell-level annotations
+# axon_cell_anno <- rowAnnotation(
+#   'Subcluster' = axon_data[['macroglia_subcluster']],
+#   'Time' = axon_data[['time']],
+#   col = list('Subcluster' = macroglia_cols,
+#              'Time' = time_cols)
+# )
+# 
+# 
+# # convert to matrix
+# axon_mat <- axon_data[!names(axon_data) %in% c('macroglia_subcluster','time')] %>%
+#   tibble::column_to_rownames(var = 'id') %>%
+#   as.matrix()
+# 
+# 
+# # Generate heatmap
+# axon_split_heatmap <- Heatmap(
+#   matrix = axon_mat,
+#   col = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 10, name = "RdYlBu")), bias = 1.6)(100),
+#   heatmap_legend_param = list(title = 'Scaled\nExpression',
+#                               title_gp = gpar(fontsize = 12),
+#                               title_position = 'leftcenter-rot',
+#                               labels = c('Low',0, 'High'),
+#                               at = c(min(expr_data), 0, max(expr_data)),
+#                               labels_gp = gpar(fontsize = 10),
+#                               legend_height = unit(2.5, units = 'cm'),
+#                               grid_width = unit(0.5, units = 'cm'),
+#                               border = 'black',
+#                               title_gap = unit(1, units = 'cm'),
+#                               direction = 'vertical'),
+#   use_raster = TRUE,
+#   right_annotation = axon_cell_anno
+# )
+# 
+# # save
+# tiff(filename = paste0(results_out, 'macroglia_axonregeninhibitory_timeSplit_heatmap.tiff'),
+#      height = 8, width = 8, units = 'in', res = 440)
+# axon_split_heatmap
+# dev.off()
+# 
+# 
+# 
+# 
 
 # Inhibitory molecules violin plot (subclusters split by time) ----------------------------
 
@@ -309,19 +309,22 @@ axon_inhibitory_vln <- axon_data %>%
   ylab(label = 'Log-normalized expression') +
   xlab(label = 'Time') +
   theme(axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'),
+        axis.title.y = element_text(size = 12, color = 'black'),
         axis.title.x = element_blank(),
         panel.background = element_rect(fill = NA, color = 'black'),
         # strip.background = element_rect(fill = NA, color = NA),
         panel.border = element_rect(fill = NA, color = 'black'),
-        strip.text.y.left = element_text(size = 12, face = 'bold', color = 'black', angle = 0, hjust = 1),
-        strip.text.x = element_text(size = 12, face = 'bold', color = 'black'),
+        strip.text.y.left = element_text(size = 12, color = 'black', angle = 0, hjust = 1),
+        strip.text.x = element_text(size = 12, color = 'black'),
         legend.position = 'none',
         axis.ticks = element_blank(),
         axis.text.y = element_blank())
 # save
 ggsave(filename =  paste0(results_out, 'macroglia_axonregeninhibitory_vln.tiff'),
        plot = axon_inhibitory_vln, device = 'tiff', height = 9, width = 14)
+
+
+# Inhibitory molecules in astrocytes, astroepen, opc-A, opc-B ------------------
 
 
 # Repeat with only Astrocytes, Astroependymal, OPC-A, and OPC-B
@@ -334,19 +337,20 @@ axon_inhibitory_vln <- axon_data %>%
   scale_y_continuous(position = 'right') +
   ylab(label = 'Log-normalized expression') +
   xlab(label = 'Time') +
-  theme(axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'),
+  theme(axis.text.x = element_text(size = 14, color = 'black', angle = 45, hjust = 1),
+        axis.title.y = element_text(size = 14, color = 'black'),
         axis.title.x = element_blank(),
         panel.background = element_rect(fill = NA, color = 'black'),
         # strip.background = element_rect(fill = NA, color = NA),
         panel.border = element_rect(fill = NA, color = 'black'),
-        strip.text.y.left = element_text(size = 12, face = 'bold', color = 'black', angle = 0, hjust = 1),
-        strip.text.x = element_text(size = 12, face = 'bold', color = 'black'),
+        strip.text.y.left = element_text(size = 14, color = 'black', angle = 0, hjust = 1, face = 'italic'),
+        strip.text.x = element_text(size = 14, color = 'black'),
         legend.position = 'none',
         axis.ticks = element_blank(),
         axis.text.y = element_blank())
+axon_inhibitory_vln
 ggsave(filename =  paste0(results_out, 'macroglia_axonregeninhibitory_selectSubclusters_vln.tiff'),
-       plot = axon_inhibitory_vln, device = 'tiff', height = 8.5, width = 6.5)
+       plot = axon_inhibitory_vln, device = 'tiff', height = 8.5, width = 6.75)
 
 
 
@@ -403,13 +407,13 @@ axon_inhibitory_vln <- axon_data %>%
   ylab(label = 'Log-normalized expression') +
   xlab(label = 'Time') +
   theme(axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'),
+        axis.title.y = element_text(size = 12, color = 'black'),
         axis.title.x = element_blank(),
         # panel.background = element_rect(fill = NA, color = NA),
         # strip.background = element_rect(fill = NA, color = NA),
         # panel.border = element_rect(fill = NA, color = 'grey60'),
-        strip.text.y.left = element_text(size = 12, face = 'bold', color = 'black', angle = 0, hjust = 1),
-        strip.text.x = element_text(size = 12, face = 'bold', color = 'black'),
+        strip.text.y.left = element_text(size = 12, color = 'black', angle = 0, hjust = 1),
+        strip.text.x = element_text(size = 12, color = 'black'),
         legend.position = 'none',
         axis.ticks = element_blank(),
         axis.text.y = element_blank())

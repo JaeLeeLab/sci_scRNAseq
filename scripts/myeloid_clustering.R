@@ -380,6 +380,45 @@ ggsave(filename = paste0(results_out, 'umap_chemistry.tiff'),
 
 
 
+# Myeloid UMAP by sample ------------------------------------------------------
+
+myeloid <- readRDS(file = './data/myeloid.rds')
+
+Idents(object = myeloid) <- 'myeloid_subcluster'
+
+umap_theme <- theme(panel.background = element_blank(),
+                    panel.border = element_blank(),
+                    axis.line = element_line(color = 'black'),
+                    axis.text = element_blank(),
+                    axis.ticks = element_blank(),
+                    axis.title = element_text(size = 16, color = 'black'),
+                    legend.title = element_text(size = 16, color = 'black'),
+                    legend.key = element_rect(fill = NA, color = NA),
+                    legend.text = element_text(size = 16, color = 'black'))
+
+# cell-type annotation split by time UMAP
+sample_cols <- c('#800000','#f58231','#4363d8','#800000','#f58231','#4363d8','#800000','#f58231','#800000','#f58231')
+names(sample_cols) <- c('uninj_sample1', 'uninj_sample2', 'uninj_sample3','1dpi_sample1', '1dpi_sample2', '1dpi_sample3', '3dpi_sample1', '3dpi_sample2', '7dpi_sample1', '7dpi_sample2')
+celltype_counts <- table(myeloid$myeloid_subcluster)
+celltype_label <- paste0(names(celltype_counts), ' (', celltype_counts, ')')
+names(celltype_label) <- names(celltype_counts)
+umap_sample <- FetchData(object = myeloid, vars = c('UMAP_1','UMAP_2','sample_id', 'time')) %>%
+  .[sample(1:nrow(.), size = nrow(.)),] %>%
+  ggplot(mapping = aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(mapping = aes(color = sample_id), size = 0.5, alpha = 0.5) +
+  facet_wrap(. ~ time, nrow = 2) +
+  scale_color_manual(values = sample_cols) +
+  umap_theme +
+  theme(strip.text = element_text(size = 16, color = 'black'),
+        legend.title = element_text(size = 16, color = 'black')) +
+  guides(color = guide_legend(title = 'Sample ID\n(colored by\nreplicate)', override.aes = list(size = 7, alpha = 1)))
+umap_sample
+ggsave(filename = paste0(results_out, 'myeloid_bySample_umap.tiff'),
+       plot = umap_sample, device = 'tiff', height = 6, width = 8.5)
+rm(myeloid); gc()
+
+
+
 # Density UMAP ------------------------------------------------------------
 
 
@@ -448,13 +487,13 @@ umap_density <- umap_data[order(umap_data$dens, na.last = FALSE, decreasing = FA
   theme(panel.background = element_rect(fill = NA, colour = 'black'),
         panel.border = element_rect(fill = NA, color = 'black'),
         axis.line = element_line(size = 0),
-        axis.title = element_text(size = 22, color = 'black', face = 'bold'),
+        axis.title = element_text(size = 20, color = 'black'),
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         strip.background = element_rect(fill = NA, color = 'black', size = 1),
-        strip.text = element_text(size = 22, color = 'black', face = 'bold'),
-        legend.title = element_text(size = 12, angle = 90, face = 'bold'),
-        legend.text = element_text(size = 12, color = 'black', face = 'bold')) +
+        strip.text = element_text(size = 20, color = 'black'),
+        legend.title = element_text(size = 20, angle = 90),
+        legend.text = element_text(size = 20, color = 'black')) +
   guides(color = guide_colorbar(title = 'log2(density)',
                                 title.position = 'left',
                                 title.hjust = 0.5,

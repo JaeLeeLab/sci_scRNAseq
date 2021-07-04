@@ -228,14 +228,14 @@ il6_plot <- il6_data %>%
   scale_x_discrete(position = 'bottom') +
   xlab(label = 'Ligand cell') +
   ylab(label = 'Ligand_Receptor Pair') +
-  theme(strip.text = element_text(size = 12, color = 'black', face = 'bold'),
+  theme(strip.text = element_text(size = 12, color = 'black'),
         strip.background = element_rect(fill = NA, color = NA),
-        axis.title.x.bottom = element_text(size = 12, color = 'black', face = 'bold'),
-        axis.title.y.left = element_text(size = 12, color = 'black', face = 'bold'),
+        axis.title.x.bottom = element_text(size = 12, color = 'black'),
+        axis.title.y.left = element_text(size = 12, color = 'black'),
         axis.text = element_text(size = 12, color = 'black'),
         axis.text.x = element_text(angle = 45, hjust = 1),
         legend.text = element_text(size = 12, color = 'black'),
-        legend.title = element_text(size = 12, color = 'black', face = 'bold'),
+        legend.title = element_text(size = 12, color = 'black'),
         legend.key = element_rect(fill = NA),
         panel.background = element_rect(fill = NA, color = 'black'),
         panel.grid.major = element_line(size = 0.5, linetype = 'dotted', color = 'grey70'),
@@ -268,14 +268,14 @@ il6_plot <- il6_data %>%
   scale_x_discrete(position = 'top') +
   xlab(label = 'Ligand cell') +
   ylab(label = 'Ligand_Receptor Pair') +
-  theme(strip.text = element_text(size = 12, color = 'black', face = 'bold'),
+  theme(strip.text = element_text(size = 12, color = 'black'),
         strip.background = element_rect(fill = NA, color = NA),
-        axis.title.x.top = element_text(size = 12, color = 'black', face = 'bold'),
-        axis.title.y.left = element_text(size = 12, color = 'black', face = 'bold'),
+        axis.title.x.top = element_text(size = 12, color = 'black'),
+        axis.title.y.left = element_text(size = 12, color = 'black'),
         axis.text = element_text(size = 12, color = 'black'),
         axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0),
         legend.text = element_text(size = 12, color = 'black'),
-        legend.title = element_text(size = 12, color = 'black', angle = 90, face = 'bold', hjust = 0.5),
+        legend.title = element_text(size = 12, color = 'black', angle = 90, hjust = 0.5),
         legend.key = element_rect(fill = NA),
         panel.background = element_rect(fill = NA, color = 'black'),
         panel.grid.major = element_line(size = 0.5, linetype = 'dotted', color = 'grey70'),
@@ -426,14 +426,14 @@ il6_plot <- il6_data %>%
   scale_x_discrete(position = 'top') +
   xlab(label = 'Ligand cell') +
   ylab(label = 'Ligand_Receptor Pair') +
-  theme(strip.text = element_text(size = 14, color = 'black', face = 'bold'),
-        strip.background = element_rect(fill = NA, color = NA),
-        axis.title.x.top = element_text(size = 12, color = 'black', face = 'bold'),
-        axis.title.y.left = element_text(size = 12, color = 'black', face = 'bold'),
-        axis.text = element_text(size = 12, color = 'black'),
-        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0, size = 12),
+  theme(strip.text = element_text(size = 14, color = 'black'),
+        strip.background = element_rect(fill = NA, color = 'black'),
+        axis.title.x.top = element_text(size = 12, color = 'black'),
+        axis.title.y.left = element_text(size = 12, color = 'black'),
+        axis.text.y.left = element_text(size = 12, color = 'black', face = 'italic'),
+        axis.text.x = element_text(angle = 45, vjust = 0.5, hjust = 0, size = 12, color = 'black'),
         legend.text = element_text(size = 12, color = 'black'),
-        legend.title = element_text(size = 12, color = 'black', angle = 0, face = 'bold', hjust = 0.5),
+        legend.title = element_text(size = 12, color = 'black', angle = 0, hjust = 0.5),
         legend.key = element_rect(fill = NA),
         panel.background = element_rect(fill = NA, color = 'black'),
         panel.grid.major = element_line(size = 0.5, linetype = 'dotted', color = 'grey70'),
@@ -450,7 +450,7 @@ il6_plot <- il6_data %>%
                              title.position = 'top',
                              override.aes = list(fill = 'black')))
 il6_plot
-ggsave(filename = './results/revision_figures/LR_results/IL6_LigandReceptorplot_flipped.tiff',
+ggsave(filename = paste0(results_out, 'IL6_LigandReceptorplot_flipped.tiff'),
        plot = il6_plot, device = 'tiff', height = 8.5, width = 16.5)
 
 
@@ -591,8 +591,8 @@ il6_ligand_dotplot <- merge(avg_exp, pct_exp) %>%
         axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
         axis.text.y = element_text(size = 12, color = 'black'),
         strip.background = element_rect(fill = NA, colour = 'black'),
-        strip.text.y = element_text(angle = 270, hjust = 0.5, face = 'bold', size = 12, color = 'black'),
-        strip.text.x = element_text(size = 12, face = 'bold', color = 'black'),
+        strip.text.y = element_text(angle = 270, hjust = 0.5, size = 12, color = 'black'),
+        strip.text.x = element_text(size = 12, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
@@ -673,8 +673,8 @@ il6_receptor_dotplot <- merge(avg_exp, pct_exp) %>%
         axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
         axis.text.y = element_text(size = 12, color = 'black'),
         strip.background = element_rect(fill = NA, colour = 'black'),
-        strip.text.y = element_text(angle = 270, hjust = 0.5, face = 'bold', size = 12, color = 'black'),
-        strip.text.x = element_text(size = 12, face = 'bold', color = 'black'),
+        strip.text.y = element_text(angle = 270, hjust = 0.5, size = 12, color = 'black'),
+        strip.text.x = element_text(size = 12, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
@@ -750,32 +750,39 @@ sci@meta.data[['subcluster']] <- subclusters[match(x = rownames(sci@meta.data),
                                                    table = names(subclusters))]
 # label unassigned cells
 sci@meta.data[['subcluster']][is.na(sci@meta.data[['subcluster']])] <- 'Unassigned'
+# sci@meta.data[['subcluster']] <- plyr::mapvalues(
+#   x = sci@meta.data[['subcluster']],
+#   from = c('Neutrophil',
+#            'Monocyte',
+#            'Macrophage-A',
+#            'Macrophage-B',
+#            'BA-Macrophage',
+#            'Dendritic',
+#            'Div-Myeloid',
+#            'H-Microglia',
+#            'DAM-A',
+#            'DAM-B',
+#            'DAM-C',
+#            'IFN-Myeloid'),
+#   to = c('Neutrophil',
+#          'Monocyte',
+#          'Chemotaxis-Inducing Mac',
+#          'Inflammatory Mac',
+#          'Border-Associated Mac',
+#          'Dendritic',
+#          'Dividing Myeloid',
+#          'Homeo Microglia',
+#          'Inflamm Microglia',
+#          'Dividing Microglia',
+#          'Migrating Microglia',
+#          'Interferon Myeloid')
+# )
 sci@meta.data[['subcluster']] <- plyr::mapvalues(
   x = sci@meta.data[['subcluster']],
-  from = c('Neutrophil',
-           'Monocyte',
-           'Macrophage-A',
-           'Macrophage-B',
-           'BA-Macrophage',
-           'Dendritic',
-           'Div-Myeloid',
-           'H-Microglia',
-           'DAM-A',
-           'DAM-B',
-           'DAM-C',
-           'IFN-Myeloid'),
-  to = c('Neutrophil',
-         'Monocyte',
-         'Chemotaxis-Inducing Mac',
-         'Inflammatory Mac',
-         'Border-Associated Mac',
-         'Dendritic',
-         'Dividing Myeloid',
-         'Homeo Microglia',
-         'Inflamm Microglia',
-         'Dividing Microglia',
-         'Migrating Microglia',
-         'Interferon Myeloid')
+  from = c('Homeostatic Microglia',
+           'Inflammatory Microglia'),
+  to = c('Homeo Microglia',
+         'Inflamm Microglia')
 )
 
 
@@ -791,8 +798,7 @@ select_sci_subclusters <- c('Neutrophil',
                             'Migrating Microglia',
                             'Border-Associated Mac',
                             'A-Endothelial',
-                            'C1-Endothelial',
-                            'C2-Endothelial',
+                            'C-Endothelial',
                             'V-Endothelial',
                             'Tip Cell',
                             'Fibroblast',
@@ -907,10 +913,10 @@ make_plot <- function(x) {
     theme(axis.title.x = element_blank(),
           axis.title.y = element_blank(),
           axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
-          axis.text.y = element_text(size = 12, color = 'black'),
+          axis.text.y = element_text(size = 12, color = 'black', face = 'italic'),
           strip.background = element_rect(fill = NA, colour = 'black'),
-          strip.text.y = element_text(angle = 270, hjust = 0.5, face = 'bold', size = 12, color = 'black'),
-          strip.text.x = element_text(size = 12, face = 'bold', color = 'black'),
+          strip.text.y = element_text(angle = 270, hjust = 0.5, size = 12, color = 'black'),
+          strip.text.x = element_text(size = 12, color = 'black'),
           strip.placement = 'outside',
           legend.background = element_rect(fill = NA),
           legend.key = element_rect(fill = NA),
@@ -945,6 +951,6 @@ rec_plot <- il6_dat %>%
   make_plot() + NoLegend()
 il6_dotplot <- cowplot::plot_grid(lig_plot, rec_plot)
 il6_dotplot
-ggsave(filename = './results/revision_figures/macroglia_il6_dotplot.tiff',
+ggsave(filename = paste0(results_out, 'macroglia_il6_dotplot.tiff'),
        plot = il6_dotplot, device = 'tiff', height = 6.25, width = 14.5)
 

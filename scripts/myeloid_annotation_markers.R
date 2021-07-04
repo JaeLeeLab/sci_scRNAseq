@@ -34,7 +34,7 @@ DefaultAssay(myeloid) <- 'RNA'
 addtl_markers <- c('Adgre1','Itgam','P2ry12','Tmem119','Siglech','Cx3cr1','Csf1r','Irf8','Msr1','Igf1','Mki67','Egr1','Ramp1','Lyz2','Ly6c2','Ccr2','Plac8','Cxcl3','Cebpb','Arg1','Cd63','Cd68','Spp1','Apoe','Trem2','Gpnmb','Ms4a7','Ly6g','H2-Aa','Mrc1')
 
 umap_coordinates <- FetchData(myeloid, vars = c('UMAP_1','UMAP_2'), slot = 'data')
-label_x <- min(umap_coordinates[['UMAP_1']]) * 0.95
+label_x <- min(umap_coordinates[['UMAP_1']]) * 0.96
 label_y <- max(umap_coordinates[['UMAP_2']]) * 0.85
 legend_x <- 0.85
 legend_y <- 0.85
@@ -81,7 +81,7 @@ for (ii in 1:length(addtl_markers)) {
           legend.background = element_rect(fill = NA),
           legend.key.size = unit(0.25, units = 'cm'), 
           legend.spacing.x = unit(0.1, units = 'cm'),
-          legend.text = element_text(size = 12, color = 'black')) +
+          legend.text = element_text(size = 14, color = 'black')) +
     guides(color = guide_colorbar(frame.colour = 'black', 
                                   ticks = FALSE,
                                   barwidth = 0.8,
@@ -144,53 +144,53 @@ write.table(seurat_markers, file = paste0(results_out, 'myeloid_defaultclusters_
 
 
 # Cell-type annotation ----------------------------------------------------
-
-myeloid@meta.data[['myeloid_subcluster']] <- plyr::mapvalues(
-  x = myeloid@meta.data[['integrated_snn_res.0.35']],
-  from = levels(myeloid@meta.data[['integrated_snn_res.0.35']]),
-  to = c('H-Microglia',
-         'DAM-A',
-         'Macrophage-A',
-         'DAM-B',
-         'Macrophage-B',
-         'Monocyte',
-         'Neutrophil',
-         'DAM-C',
-         'Dendritic',
-         'IFN-Myeloid',
-         'Div-Myeloid',
-         'BA-Macrophage')
-)
-myeloid@meta.data[['myeloid_subcluster']] <- factor(
-  x = myeloid@meta.data[['myeloid_subcluster']],
-  levels = c('Neutrophil',
-             'Monocyte',
-             'Macrophage-A',
-             'Macrophage-B',
-             'BA-Macrophage',
-             'Dendritic',
-             'Div-Myeloid',
-             'H-Microglia',
-             'DAM-A',
-             'DAM-B',
-             'DAM-C',
-             'IFN-Myeloid')
-)
-Idents(myeloid) <- 'myeloid_subcluster'
-
-# Save barcode-identities data.frame
-write.table(x = myeloid@meta.data['myeloid_subcluster'],
-            file = paste0(results_out, 'myeloid_subcluster.tsv'),
-            sep = '\t', row.names = TRUE, col.names = NA)
-
-
-
+# 
+# myeloid@meta.data[['old_subcluster']] <- plyr::mapvalues(
+#   x = myeloid@meta.data[['integrated_snn_res.0.35']],
+#   from = levels(myeloid@meta.data[['integrated_snn_res.0.35']]),
+#   to = c('H-Microglia',
+#          'DAM-A',
+#          'Macrophage-A',
+#          'DAM-B',
+#          'Macrophage-B',
+#          'Monocyte',
+#          'Neutrophil',
+#          'DAM-C',
+#          'Dendritic',
+#          'IFN-Myeloid',
+#          'Div-Myeloid',
+#          'BA-Macrophage')
+# )
+# myeloid@meta.data[['old_subcluster']] <- factor(
+#   x = myeloid@meta.data[['old_subcluster']],
+#   levels = c('Neutrophil',
+#              'Monocyte',
+#              'Macrophage-A',
+#              'Macrophage-B',
+#              'BA-Macrophage',
+#              'Dendritic',
+#              'Div-Myeloid',
+#              'H-Microglia',
+#              'DAM-A',
+#              'DAM-B',
+#              'DAM-C',
+#              'IFN-Myeloid')
+# )
+# Idents(myeloid) <- 'myeloid_subcluster'
+# 
+# # Save barcode-identities data.frame
+# write.table(x = myeloid@meta.data['myeloid_subcluster'],
+#             file = paste0(results_out, 'myeloid_subcluster.tsv'),
+#             sep = '\t', row.names = TRUE, col.names = NA)
+# 
+# 
+#
 # Functional subcluster annotation --------------------------------------
 
 
-dir.create(path = './results/revision_figures/functional_names/')
+# dir.create(path = './results/revision_figures/functional_names/')
 
-myeloid@meta.data[['myeloid_functional']] <- plyr::mapvalues(
+myeloid@meta.data[['myeloid_subcluster']] <- plyr::mapvalues(
   x = myeloid@meta.data[['integrated_snn_res.0.35']],
   from = levels(myeloid@meta.data[['integrated_snn_res.0.35']]),
   to = c('Homeostatic Microglia',
@@ -206,8 +206,8 @@ myeloid@meta.data[['myeloid_functional']] <- plyr::mapvalues(
          'Dividing Myeloid',
          'Border-Associated Mac')
 )
-myeloid@meta.data[['myeloid_functional']] <- factor(
-  x = myeloid@meta.data[['myeloid_functional']],
+myeloid@meta.data[['myeloid_subcluster']] <- factor(
+  x = myeloid@meta.data[['myeloid_subcluster']],
   levels = c('Neutrophil',
              'Monocyte',
              'Chemotaxis-Inducing Mac',
@@ -222,74 +222,13 @@ myeloid@meta.data[['myeloid_functional']] <- factor(
              'Interferon Myeloid')
 )
 
+# Save barcode-identities data.frame
+write.table(x = myeloid@meta.data['myeloid_subcluster'],
+            file = paste0(results_out, 'myeloid_subcluster.tsv'),
+            sep = '\t', row.names = TRUE, col.names = NA)
 
 
 # Cell-type UMAP across time ----------------------------------------------
-
-myeloid_cols <- c('Neutrophil' = '#800000',    
-                  'Monocyte' = '#9a6324',
-                  'Macrophage-A' = '#e6194b',
-                  'Macrophage-B' = '#f58231',
-                  'BA-Macrophage' = '#CCCC00',
-                  'Dendritic' = '#808000',
-                  'Div-Myeloid' = '#3cb44b',
-                  'H-Microglia' = '#008080',
-                  'DAM-A' = 'cyan3',
-                  'DAM-B' = '#4363d8',
-                  'DAM-C' = '#000075',
-                  'IFN-Myeloid' = '#911eb4')
-Idents(object = myeloid) <- 'myeloid_subcluster'
-
-umap_theme <- theme(panel.background = element_blank(),
-                    panel.border = element_blank(),
-                    axis.line = element_line(color = 'black'),
-                    axis.text = element_blank(),
-                    axis.ticks = element_blank(),
-                    axis.title = element_text(size = 18, color = 'black', face = 'bold'),
-                    legend.title = element_text(size = 14, color = 'black', face = 'bold'),
-                    legend.key = element_rect(fill = NA, color = NA),
-                    legend.text = element_text(size = 14, color = 'black'))
-
-# cell-type annotation UMAP 
-myeloid_subcluster_counts <- table(myeloid$myeloid_subcluster)
-myeloid_subcluster_label <- paste0(names(myeloid_subcluster_counts), ' (', myeloid_subcluster_counts, ')')
-names(myeloid_subcluster_label) <- names(myeloid_subcluster_counts)
-myeloid_subcluster_umap <- FetchData(object = myeloid, vars = c('UMAP_1','UMAP_2','myeloid_subcluster')) %>%
-  .[sample(1:nrow(.), size = nrow(.)),] %>%
-  ggplot(mapping = aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(mapping = aes(color = myeloid_subcluster), size = 0.2, alpha = 0.5) +
-  scale_color_manual(values = myeloid_cols, 
-                     breaks = names(myeloid_subcluster_label),
-                     label = myeloid_subcluster_label) +
-  xlab(label = 'UMAP 1') +
-  ylab(label = 'UMAP 2') +
-  umap_theme +
-  theme(legend.text = element_text(size = 16, color = 'black')) +
-  guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
-ggsave(filename = paste0(results_out, 'myeloid_subcluster_annotation_umap.tiff'),
-       plot = myeloid_subcluster_umap, device = 'tiff', height = 6, width = 9.25)
-
-
-# cell-type annotation split by time UMAP (figure 1b)
-myeloid_subcluster_split_umap <- FetchData(myeloid, vars = c('UMAP_1','UMAP_2','myeloid_subcluster','time')) %>%
-  .[sample(1:nrow(.), size = nrow(.)),] %>%
-  ggplot(mapping = aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(mapping = aes(color = myeloid_subcluster), size = 0.2, alpha = 0.5) +
-  facet_wrap(. ~ time, ncol = 2) +
-  scale_color_manual(values = myeloid_cols, breaks = names(myeloid_subcluster_label), label = myeloid_subcluster_label) +
-  umap_theme +
-  theme(strip.text = element_text(size = 14, color = 'black')) +
-  guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
-ggsave(filename = paste0(results_out, 'myeloid_subcluster_annotation_split_umap.tiff'),
-       plot = myeloid_subcluster_split_umap, device = 'tiff', height = 6, width = 9)
-
-
-
-
-# Cell-type UMAP across time (functional annotation ) -------------------------
-
-
-dir.create(path = './results/revision_figures/functional_names/')
 
 myeloid_cols <- c('#800000', 
                   '#9a6324',
@@ -315,26 +254,26 @@ names(myeloid_cols) <- c('Neutrophil',
                          'Dividing Microglia',
                          'Migrating Microglia',
                          'Interferon Myeloid')
-Idents(myeloid) <- 'myeloid_functional'
+Idents(myeloid) <- 'myeloid_subcluster'
 
 umap_theme <- theme(panel.background = element_blank(),
                     panel.border = element_blank(),
                     axis.line = element_line(color = 'black'),
                     axis.text = element_blank(),
                     axis.ticks = element_blank(),
-                    axis.title = element_text(size = 18, color = 'black', face = 'bold'),
-                    legend.title = element_text(size = 14, color = 'black', face = 'bold'),
+                    axis.title = element_text(size = 16, color = 'black'),
+                    legend.title = element_text(size = 16, color = 'black'),
                     legend.key = element_rect(fill = NA, color = NA),
-                    legend.text = element_text(size = 14, color = 'black'))
+                    legend.text = element_text(size = 16, color = 'black'))
 
 # cell-type annotation UMAP 
-myeloid_subcluster_counts <- table(myeloid$myeloid_functional)
+myeloid_subcluster_counts <- table(myeloid$myeloid_subcluster)
 myeloid_subcluster_label <- paste0(names(myeloid_subcluster_counts), ' (', myeloid_subcluster_counts, ')')
 names(myeloid_subcluster_label) <- names(myeloid_subcluster_counts)
-myeloid_subcluster_umap <- FetchData(object = myeloid, vars = c('UMAP_1','UMAP_2','myeloid_functional')) %>%
+myeloid_subcluster_umap <- FetchData(object = myeloid, vars = c('UMAP_1','UMAP_2','myeloid_subcluster')) %>%
   .[sample(1:nrow(.), size = nrow(.)),] %>%
   ggplot(mapping = aes(x = UMAP_1, y = UMAP_2)) +
-  geom_point(mapping = aes(color = myeloid_functional), size = 0.2, alpha = 0.5) +
+  geom_point(mapping = aes(color = myeloid_subcluster), size = 0.2, alpha = 0.5) +
   scale_color_manual(values = myeloid_cols, 
                      breaks = names(myeloid_subcluster_label),
                      label = myeloid_subcluster_label) +
@@ -343,160 +282,22 @@ myeloid_subcluster_umap <- FetchData(object = myeloid, vars = c('UMAP_1','UMAP_2
   umap_theme +
   theme(legend.text = element_text(size = 16, color = 'black')) +
   guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
-myeloid_subcluster_umap
-ggsave(filename = './results/revision_figures/functional_names/myeloid_annotation_umap.tiff',
-       plot = myeloid_subcluster_umap, 
-       device = 'tiff', height = 6, width = 10.25)
+ggsave(filename = paste0(results_out, 'myeloid_subcluster_annotation_umap.tiff'),
+       plot = myeloid_subcluster_umap, device = 'tiff', height = 6, width = 10.25)
 
 
-
-
-# Microglia DE markers dot plot -----------------------------------------------
-
-
-### Using same markers as pre-print %%%%%%%%%
-
-# Subset cells
-microglia <- c('H-Microglia',
-               'DAM-A',
-               'DAM-B',
-               'DAM-C')
-Idents(myeloid) <- 'myeloid_subcluster'
-microglia <- subset(myeloid, idents = microglia)
-
-microglia_markers <- c('P2ry12','Igf1','Msr1','Cdk1')
-
-# Calculate average and percent expression (scaled to within microglia)
-DefaultAssay(microglia) <- 'RNA'
-avg_exp <- data.frame(t(ScaleData(microglia[['RNA']]@data, features = microglia_markers)))
-avg_exp <- cbind(avg_exp, 'myeloid_subcluster' = as.character(microglia@meta.data[,c('myeloid_subcluster')])) %>%
-  reshape2::melt(id.vars = c('myeloid_subcluster')) %>%
-  group_by(myeloid_subcluster, variable) %>%
-  summarise(avg.exp = mean(value))
-pct_exp <- data.frame(t(microglia[['RNA']]@counts[microglia_markers,]))
-pct_exp <- cbind(pct_exp, 'myeloid_subcluster' = as.character(microglia@meta.data[,c('myeloid_subcluster')])) %>%
-  reshape2::melt(id.vars = c('myeloid_subcluster')) %>%
-  group_by(myeloid_subcluster, variable) %>%
-  summarise(pct.exp = mean(value > 0) * 100)
-min_expr <- floor(min(avg_exp$avg.exp)*10)/10
-max_expr <- ceiling(max(avg_exp$avg.exp)*10)/10
-
-# Plot
-microglia_markers_dotplot <- merge(avg_exp, pct_exp) %>%
-  mutate(myeloid_subcluster = factor(myeloid_subcluster, levels = rev(levels(myeloid$myeloid_subcluster)))) %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
-  geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
-  scale_size(range = c(0,14), limits = c(0,100)) +
-  scale_fill_gradientn(colors = rev(colorRampPalette(
-    colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100)),
-    breaks = c(min_expr, 0, max_expr),
-    labels = c(min_expr, 0, max_expr),
-    limits = c(min_expr, max_expr)) +
-  scale_y_discrete(position = 'right') +
-  theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
-        strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
-        strip.placement = 'outside',
-        legend.background = element_rect(fill = NA),
-        legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 14, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
-        legend.margin = margin(5,0,10,0),
-        legend.box = 'horizontal',
-        legend.direction = 'vertical',
-        legend.position = 'right',
-        legend.spacing.x = unit(x = 2, units = 'mm'),
-        panel.border = element_rect(fill = NA, size = 1),
-        panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'Scaled\nexpression', 
-                               barwidth = 1.25,
-                               frame.colour = 'black', 
-                               frame.linewidth = 1.25,
-                               ticks.colour = 'black', 
-                               ticks.linewidth = 1.25,
-                               title.position = 'left'), 
-         size = guide_legend(title = '% expression', 
-                             override.aes = list(fill = 'black'),
-                             title.position = 'left'))
-microglia_markers_dotplot
-ggsave(filename = paste0(results_out, 'microglia_markers_dotplot.tiff'),
-       plot = microglia_markers_dotplot, device = 'tiff', height = 2.75, width = 6.25)
-
-
-### Generating new marker genes %%%%%%%%%
-
-# Use Seurat wilcox test
-microglia_srat_genes <- FindAllMarkers(object = microglia,
-                                       assay = 'RNA',
-                                       logfc.threshold = 0.25,
-                                       only.pos = TRUE)
-microglia_markers <-  microglia_srat_genes %>%
-  group_by(cluster) %>%
-  top_n(n = 3, wt = avg_logFC) %>%
-  .[['gene']]
-
-# Calculate average and percent expression (scaled to within microglia)
-DefaultAssay(microglia) <- 'RNA'
-avg_exp <- data.frame(t(ScaleData(microglia[['RNA']]@data, features = microglia_markers)))
-avg_exp <- cbind(avg_exp, 'myeloid_subcluster' = as.character(microglia@meta.data[,c('myeloid_subcluster')])) %>%
-  reshape2::melt(id.vars = c('myeloid_subcluster')) %>%
-  group_by(myeloid_subcluster, variable) %>%
-  summarise(avg.exp = mean(value))
-pct_exp <- data.frame(t(microglia[['RNA']]@counts[microglia_markers,]))
-pct_exp <- cbind(pct_exp, 'myeloid_subcluster' = as.character(microglia@meta.data[,c('myeloid_subcluster')])) %>%
-  reshape2::melt(id.vars = c('myeloid_subcluster')) %>%
-  group_by(myeloid_subcluster, variable) %>%
-  summarise(pct.exp = mean(value > 0) * 100)
-expr_colors <- colorRampPalette(colors = c('dodgerblue', 'white',' indianred'))(100)
-
-# Plot
-max_exp <- 1.5
-microglia_markers_dotplot <- merge(avg_exp, pct_exp) %>%
-  mutate(myeloid_subcluster = factor(myeloid_subcluster, levels = rev(levels(myeloid$myeloid_subcluster)))) %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
-  geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
-  scale_size(range = c(0,10), limits = c(0,100)) +
-  scale_fill_gradient2(low = "#2166AC", 
-                       mid = "#F7F7F7",
-                       high = "#B2182B", 
-                       limits = c(NA, max_exp), 
-                       na.value ="#B2182B",
-                       breaks = seq(-5, 10, 1)) +
-  scale_y_discrete(position = 'right') +
-  theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
-        strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
-        strip.placement = 'outside',
-        legend.background = element_rect(fill = NA),
-        legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 14, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
-        legend.margin = margin(5,0,10,0),
-        legend.box = 'horizontal',
-        legend.position = 'right',
-        legend.spacing.x = unit(x = 2, units = 'mm'),
-        panel.border = element_rect(fill = NA, size = 1),
-        panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'Scaled\nexpression', 
-                               barwidth = 1.25,
-                               frame.colour = 'black', 
-                               frame.linewidth = 1.25,
-                               ticks.colour = 'black', 
-                               ticks.linewidth = 1.25,
-                               title.position = 'left'), 
-         size = guide_legend(title = '% expression', 
-                             override.aes = list(fill = 'black'),
-                             title.position = 'left'))
-ggsave(filename = paste0(results_out, 'microglia_markers_dotplot_new.tiff'),
-       plot = microglia_markers_dotplot, device = 'tiff', height = 2.75, width = 9)
+# cell-type annotation split by time UMAP (figure 1b)
+myeloid_subcluster_split_umap <- FetchData(myeloid, vars = c('UMAP_1','UMAP_2','myeloid_subcluster','time')) %>%
+  .[sample(1:nrow(.), size = nrow(.)),] %>%
+  ggplot(mapping = aes(x = UMAP_1, y = UMAP_2)) +
+  geom_point(mapping = aes(color = myeloid_subcluster), size = 0.2, alpha = 0.5) +
+  facet_wrap(. ~ time, ncol = 2) +
+  scale_color_manual(values = myeloid_cols, breaks = names(myeloid_subcluster_label), label = myeloid_subcluster_label) +
+  umap_theme +
+  theme(strip.text = element_text(size = 14, color = 'black')) +
+  guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
+ggsave(filename = paste0(results_out, 'myeloid_subcluster_annotation_split_umap.tiff'),
+       plot = myeloid_subcluster_split_umap, device = 'tiff', height = 6, width = 9)
 
 
 
@@ -504,14 +305,14 @@ ggsave(filename = paste0(results_out, 'microglia_markers_dotplot_new.tiff'),
 # Microglia DE markers dot plot (functional annotation) -----------------------
 
 
-### Using same markers as pre-print %%%%%%%%%
+### Using same markers as flow cytometry ###
 
 # Subset cells
 microglia <- c('Homeostatic Microglia',
                'Inflammatory Microglia',
                'Dividing Microglia',
                'Migrating Microglia')
-Idents(myeloid) <- 'myeloid_functional'
+Idents(myeloid) <- 'myeloid_subcluster'
 microglia <- subset(myeloid, idents = microglia)
 
 microglia_markers <- c('P2ry12','Igf1','Msr1','Cdk1')
@@ -531,14 +332,14 @@ tmp_de$signif <- ifelse(test = tmp_de$p_val < 1e-10,
 # Calculate average and percent expression (scaled to within microglia)
 DefaultAssay(microglia) <- 'RNA'
 avg_exp <- data.frame(t(ScaleData(microglia[['RNA']]@data, features = microglia_markers)))
-avg_exp <- cbind(avg_exp, 'myeloid_functional' = as.character(microglia@meta.data[,c('myeloid_functional')])) %>%
-  reshape2::melt(id.vars = c('myeloid_functional')) %>%
-  group_by(myeloid_functional, variable) %>%
+avg_exp <- cbind(avg_exp, 'myeloid_subcluster' = as.character(microglia@meta.data[,c('myeloid_subcluster')])) %>%
+  reshape2::melt(id.vars = c('myeloid_subcluster')) %>%
+  group_by(myeloid_subcluster, variable) %>%
   summarise(avg.exp = mean(value))
 pct_exp <- data.frame(t(microglia[['RNA']]@counts[microglia_markers,]))
-pct_exp <- cbind(pct_exp, 'myeloid_functional' = as.character(microglia@meta.data[,c('myeloid_functional')])) %>%
-  reshape2::melt(id.vars = c('myeloid_functional')) %>%
-  group_by(myeloid_functional, variable) %>%
+pct_exp <- cbind(pct_exp, 'myeloid_subcluster' = as.character(microglia@meta.data[,c('myeloid_subcluster')])) %>%
+  reshape2::melt(id.vars = c('myeloid_subcluster')) %>%
+  group_by(myeloid_subcluster, variable) %>%
   summarise(pct.exp = mean(value > 0) * 100)
 # min_expr <- floor(min(avg_exp$avg.exp)*10)/10
 max_expr <- ceiling(max(avg_exp$avg.exp)*10)/10
@@ -546,8 +347,8 @@ min_expr <- -1*max_expr
 
 # Plot
 microglia_markers_dotplot <- merge(avg_exp, pct_exp) %>%
-  mutate(myeloid_functional = factor(myeloid_functional, levels = rev(levels(myeloid$myeloid_functional)))) %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_functional)) +
+  mutate(myeloid_subcluster = factor(myeloid_subcluster, levels = rev(levels(myeloid$myeloid_subcluster)))) %>%
+  ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
   geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
   geom_text(data = tmp_de, mapping = aes(x = variable, y = cluster, label = signif),
             size = 8, fontface = 'bold', nudge_y = -0.05, nudge_x = 0.01) +
@@ -562,15 +363,15 @@ microglia_markers_dotplot <- merge(avg_exp, pct_exp) %>%
   theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 11, color = 'black', face = 'italic'),
+        axis.text.y = element_text(size = 11, color = 'black'),
         strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, size = 20, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 14, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
+        legend.text = element_text(size = 12, color = 'black', hjust = 0),
+        legend.title = element_text(size = 12, angle = 90, color = 'black', hjust = 0.5),
         legend.margin = margin(5,0,10,0),
         legend.box = 'horizontal',
         legend.direction = 'vertical',
@@ -589,108 +390,16 @@ microglia_markers_dotplot <- merge(avg_exp, pct_exp) %>%
                              override.aes = list(fill = 'black'),
                              title.position = 'left'))
 microglia_markers_dotplot
-ggsave(filename = './results/revision_figures/functional_names/microglia_markers_dotplot_functional.tiff',
-       plot = microglia_markers_dotplot, device = 'tiff', height = 2.75, width = 7)
+ggsave(filename = paste0(results_out, 'microglia_markers_dotplot.tiff'),
+       plot = microglia_markers_dotplot, device = 'tiff', height = 2.75, width = 6.5)
 
-
-
-
-# Microglia DE markers heatmap ------------------------------------------------------
-
-# Preset values
-Idents(myeloid) <- 'myeloid_subcluster'
-DefaultAssay(myeloid) <- 'RNA'
-myeloid_cols <- c('Neutrophil' = '#800000',    
-                  'Monocyte' = '#9a6324',
-                  'Macrophage-A' = '#e6194b',
-                  'Macrophage-B' = '#f58231',
-                  'BA-Macrophage' = '#CCCC00',
-                  'Dendritic' = '#808000',
-                  'Div-Myeloid' = '#3cb44b',
-                  'H-Microglia' = '#008080',
-                  'DAM-A' = 'cyan3',
-                  'DAM-B' = '#000075',
-                  'DAM-C' = '#4363d8',
-                  'IFN-Myeloid' = '#911eb4')
-time_cols <- RColorBrewer::brewer.pal(n = 4, name = 'Spectral')
-names(time_cols) <- c('Uninjured','1dpi','3dpi','7dpi')
-
-# Subset cells
-microglia_names <- c('H-Microglia',
-                     'DAM-A',
-                     'DAM-B',
-                     'DAM-C',
-                     'IFN-Myeloid')
-microglia <- subset(myeloid, idents = microglia_names)
-
-# Use Seurat wilcox test
-microglia_srat_genes <- FindAllMarkers(object = microglia,
-                                       assay = 'RNA',
-                                       logfc.threshold = 0.25,
-                                       only.pos = TRUE)
-write.table(file = paste0(results_out, 'microglia_DE_wilcox.tsv'),
-            x = microglia_srat_genes, sep = '\t', row.names = TRUE, 
-            col.names = NA)
-microglia_srat_genes <- read.table(file = paste0(results_out, 'microglia_DE_wilcox.tsv'),
-                                   sep = '\t', header = TRUE, row.names = 1)
-# Build heatmap
-microglia_de_genes <- microglia_srat_genes %>%
-  group_by(cluster) %>%
-  filter(avg_logFC > 0.5) %>%
-  filter(p_val_adj < 1e-03) %>%
-  top_n(n = 10, wt = avg_logFC) %>%
-  .[['gene']] %>%
-  unique()
-expr_data <- t(ScaleData(object = microglia@assays$RNA@data[microglia_de_genes,])) %>%
-  cbind(microglia@meta.data[c('myeloid_subcluster')]) %>%
-  group_by(myeloid_subcluster) %>%
-  summarise(across(.cols = all_of(microglia_de_genes), .fns = mean)) %>%
-  reshape2::melt(id.vars = 'myeloid_subcluster') %>%
-  mutate(variable = factor(variable, levels = unique(variable)),
-         myeloid_subcluster = factor(myeloid_subcluster, rev(levels(myeloid_subcluster))))
-max_expr <- 1.5
-min_expr <- round(floor(min(expr_data$value)*10)/10,1)
-myColors <- rev(colorRampPalette(colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
-myBreaks <- c(seq(min(expr_data$value), 0, length.out = 50),
-              seq(max_expr/100, max_expr, length.out = 50))
-microglia_de_genes_heatmap <- expr_data %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
-  geom_tile(mapping = aes(fill = value), color = 'black', size = 0.3) +
-  scale_fill_gradientn(colors = myColors,
-                       values = scales::rescale(x = myBreaks, to = c(0,1)),
-                       limits = c(min_expr, max_expr), 
-                       na.value = myColors[100],
-                       breaks = c(min_expr,0,max_expr)) +
-  scale_x_discrete(expand = c(0,0)) + 
-  scale_y_discrete(expand = c(0,0)) +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
-        legend.position = 'bottom',
-        legend.direction = 'horizontal',
-        legend.title = element_text(color = 'black', size = 14, hjust = 0),
-        legend.text = element_text(size = 12, color = 'black'),
-        legend.margin=margin(-10, -10, 0, -10),
-        legend.box.margin=margin(-5,0,0,0,unit='mm')) +
-  guides(fill = guide_colorbar(title = 'Scaled Expression',
-                               title.position = 'top',
-                               frame.colour = 'black',
-                               ticks.colour = 'black',
-                               frame.linewidth = 1,
-                               ticks.linewidth = 1,
-                               title.hjust = 1))
-microglia_de_genes_heatmap
-ggsave(filename = paste0(results_out, 'microglia_de_genes_heatmap.tiff'),
-       plot = microglia_de_genes_heatmap, device = 'tiff',
-       height = 3, width = 11)
 
 
 
 # Microglia DE markers heatmap (functional annotation) -------------------------
 
 # Preset values
-Idents(myeloid) <- 'myeloid_functional'
+Idents(myeloid) <- 'myeloid_subcluster'
 DefaultAssay(myeloid) <- 'RNA'
 myeloid_cols <- c('#800000', 
                   '#9a6324',
@@ -732,11 +441,12 @@ microglia_srat_genes <- FindAllMarkers(object = microglia,
                                        assay = 'RNA',
                                        logfc.threshold = 0.25,
                                        only.pos = TRUE)
-write.table(file = './results/revision_figures/functional_names/microglia_DE_wilcox.tsv',
+write.table(file = paste0(results_out, 'microglia_DE_wilcox.tsv'),
             x = microglia_srat_genes, sep = '\t', row.names = TRUE, 
             col.names = NA)
-microglia_srat_genes <- read.table(file = './results/revision_figures/functional_names/microglia_DE_wilcox.tsv',
+microglia_srat_genes <- read.table(file = paste0(results_out, 'microglia_DE_wilcox.tsv'),
                                    sep = '\t', header = TRUE, row.names = 1)
+
 # Build heatmap
 microglia_de_genes <- microglia_srat_genes %>%
   group_by(cluster) %>%
@@ -746,31 +456,28 @@ microglia_de_genes <- microglia_srat_genes %>%
   .[['gene']] %>%
   unique()
 expr_data <- t(ScaleData(object = microglia@assays$RNA@data[microglia_de_genes,])) %>%
-  cbind(microglia@meta.data[c('myeloid_functional')]) %>%
-  group_by(myeloid_functional) %>%
+  cbind(microglia@meta.data[c('myeloid_subcluster')]) %>%
+  group_by(myeloid_subcluster) %>%
   summarise(across(.cols = all_of(microglia_de_genes), .fns = mean)) %>%
-  reshape2::melt(id.vars = 'myeloid_functional') %>%
+  reshape2::melt(id.vars = 'myeloid_subcluster') %>%
   mutate(variable = factor(variable, levels = unique(variable)),
-         myeloid_functional = factor(myeloid_functional, rev(levels(myeloid_functional))))
+         myeloid_subcluster = factor(myeloid_subcluster, rev(levels(myeloid_subcluster))))
 
 expr_data$pval <- 1
 for (i in 1:nrow(microglia_srat_genes)) {
-  tmp <- which(as.character(expr_data$myeloid_functional) == as.character(microglia_srat_genes$cluster[i]) &
+  tmp <- which(as.character(expr_data$myeloid_subcluster) == as.character(microglia_srat_genes$cluster[i]) &
                  as.character(expr_data$variable) == as.character(microglia_srat_genes$gene[i]))
   expr_data$pval[tmp] <- microglia_srat_genes$p_val_adj[i]
 }
 expr_data$significant <- ifelse(test = expr_data$pval < 1e-10,
                                 yes = '*',
                                 no = ' ')
-
 max_expr <- 1.5
-# min_expr <- round(floor(min(expr_data$value)*10)/10,1)
 min_expr <- -1*max_expr
 myColors <- rev(colorRampPalette(colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
-# myBreaks <- c(seq(min(expr_data$value), 0, length.out = 50),
-#               seq(max_expr/100, max_expr, length.out = 50))
+
 microglia_de_genes_heatmap <- expr_data %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_functional)) +
+  ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
   geom_tile(mapping = aes(fill = value), color = 'black', size = 0.3) +
   geom_text(mapping = aes(label = significant)) +
   scale_fill_gradientn(colors = myColors,
@@ -781,7 +488,7 @@ microglia_de_genes_heatmap <- expr_data %>%
   scale_y_discrete(expand = c(0,0)) +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black', face = 'italic'),
         axis.text.y = element_text(size = 14, color = 'black'),
         legend.position = 'bottom',
         legend.direction = 'horizontal',
@@ -797,7 +504,7 @@ microglia_de_genes_heatmap <- expr_data %>%
                                ticks.linewidth = 1,
                                title.hjust = 0.5))
 microglia_de_genes_heatmap
-ggsave(filename = './results/revision_figures/functional_names/microglia_de_genes_heatmap.tiff',
+ggsave(filename = paste0(results_out, 'microglia_de_genes_heatmap.tiff'),
        plot = microglia_de_genes_heatmap, device = 'tiff',
        height = 3, width = 12)
 
@@ -912,26 +619,36 @@ dev.off()
 
 
 
+# Macrophage DE markers dot plot (functional annotation) ----------------------
 
 
-# Macrophage DE markers dot plot -----------------------------------------------
-
-
-### Using same markers as pre-print %%%%%%%%%
+### Using same markers as flow cytometry + preprint %%%%%%%%%
 
 # Subset cells
 macrophage <- c('Neutrophil',
                 'Monocyte',
-                'Macrophage-A',
-                'Macrophage-B',
-                'BA-Macrophage',
+                'Chemotaxis-Inducing Mac',
+                'Inflammatory Mac',
+                'Border-Associated Mac',
                 'Dendritic',
-                'Div-Myeloid')
+                'Dividing Myeloid')
 Idents(myeloid) <- 'myeloid_subcluster'
 macrophage <- subset(myeloid, idents = macrophage)
 
 # Previously identified genes
 macrophage_markers <- c('Cxcl3','Plac8','Arg1','Hmox1','Apoe','Cd63','Mrc1','Cd74','Cdk1')
+tmp_de <- FindAllMarkers(
+  object = macrophage,
+  assay = 'RNA',
+  slot = 'data',
+  features = macrophage_markers,
+  only.pos = TRUE
+)
+tmp_de$p_val_adj <- signif(tmp_de$p_val_adj, digits = 2)
+tmp_de$variable <- tmp_de$gene
+tmp_de$signif <- ifelse(test = tmp_de$p_val < 1e-10,
+                        yes = '*',
+                        no = '')
 
 # Calculate average and percent expression (scaled to within macrophage)
 DefaultAssay(macrophage) <- 'RNA'
@@ -949,12 +666,14 @@ my_cols <- rev(colorRampPalette(
   colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
 
 # Plot
-min_expr <- floor(min(avg_exp$avg.exp)*10)/10
-max_expr <- 1.3
+max_expr <- 1.4
+min_expr <- -1.4
 macrophage_markers_dotplot <- merge(avg_exp, pct_exp) %>%
   mutate(myeloid_subcluster = factor(myeloid_subcluster, levels = rev(levels(myeloid$myeloid_subcluster)))) %>%
   ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
   geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
+  geom_text(data = tmp_de, mapping = aes(x = variable, y = cluster, label = signif),
+            size = 8, fontface = 'bold', nudge_y = -0.09, nudge_x = 0.01) +
   scale_size(range = c(0,11), limits = c(0,100)) +
   scale_fill_gradientn(
     colors = my_cols,
@@ -966,10 +685,10 @@ macrophage_markers_dotplot <- merge(avg_exp, pct_exp) %>%
   theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black', face = 'italic'),
         axis.text.y = element_text(size = 14, color = 'black'),
         strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, size = 20, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
@@ -982,7 +701,7 @@ macrophage_markers_dotplot <- merge(avg_exp, pct_exp) %>%
         legend.spacing.x = unit(x = 2, units = 'mm'),
         panel.border = element_rect(fill = NA, size = 1),
         panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'Scaled\nexpression', 
+  guides(fill = guide_colorbar(title = 'z-score', 
                                barwidth = 1.25,
                                barheight = 4,
                                frame.colour = 'black', 
@@ -995,7 +714,8 @@ macrophage_markers_dotplot <- merge(avg_exp, pct_exp) %>%
                              title.position = 'left'))
 macrophage_markers_dotplot
 ggsave(filename = paste0(results_out, 'macrophage_markers_dotplot.tiff'),
-       plot = macrophage_markers_dotplot, device = 'tiff', height = 3.5, width = 7.25)
+       plot = macrophage_markers_dotplot, device = 'tiff', height = 3.5, width = 8)
+
 
 
 ### Generating new marker genes %%%%%%%%%
@@ -1044,7 +764,7 @@ macrophage_markers_dotplot <- merge(avg_exp, pct_exp) %>%
         axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
         axis.text.y = element_text(size = 14, color = 'black'),
         strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
+        strip.text.y.left = element_text(angle = 0, hjust = 1, size = 20, color = 'black'),
         strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
@@ -1071,13 +791,9 @@ ggsave(filename = paste0(results_out, 'macrophage_markers_dotplot_new.tiff'),
 
 
 
+# Macrophage DE markers heatmap (functional annotation) ------------------------
 
-# Macrophage DE markers dot plot (functional annotation) ----------------------
-
-
-### Using same markers as pre-print %%%%%%%%%
-
-# Subset cells
+DefaultAssay(myeloid) <- 'RNA'
 macrophage <- c('Neutrophil',
                 'Monocyte',
                 'Chemotaxis-Inducing Mac',
@@ -1085,106 +801,9 @@ macrophage <- c('Neutrophil',
                 'Border-Associated Mac',
                 'Dendritic',
                 'Dividing Myeloid')
-Idents(myeloid) <- 'myeloid_functional'
-macrophage <- subset(myeloid, idents = macrophage)
-
-# Previously identified genes
-macrophage_markers <- c('Cxcl3','Plac8','Arg1','Hmox1','Apoe','Cd63','Mrc1','Cd74','Cdk1')
-tmp_de <- FindAllMarkers(
-  object = macrophage,
-  assay = 'RNA',
-  slot = 'data',
-  features = macrophage_markers,
-  only.pos = TRUE
-)
-tmp_de$p_val_adj <- signif(tmp_de$p_val_adj, digits = 2)
-tmp_de$variable <- tmp_de$gene
-tmp_de$signif <- ifelse(test = tmp_de$p_val < 1e-10,
-                        yes = '*',
-                        no = '')
-
-# Calculate average and percent expression (scaled to within macrophage)
-DefaultAssay(macrophage) <- 'RNA'
-avg_exp <- data.frame(t(ScaleData(macrophage[['RNA']]@data, features = macrophage_markers)))
-avg_exp <- cbind(avg_exp, 'myeloid_functional' = as.character(macrophage@meta.data[,c('myeloid_functional')])) %>%
-  reshape2::melt(id.vars = c('myeloid_functional')) %>%
-  group_by(myeloid_functional, variable) %>%
-  summarise(avg.exp = mean(value))
-pct_exp <- data.frame(t(macrophage[['RNA']]@counts[macrophage_markers,]))
-pct_exp <- cbind(pct_exp, 'myeloid_functional' = as.character(macrophage@meta.data[,c('myeloid_functional')])) %>%
-  reshape2::melt(id.vars = c('myeloid_functional')) %>%
-  group_by(myeloid_functional, variable) %>%
-  summarise(pct.exp = mean(value > 0) * 100)
-my_cols <- rev(colorRampPalette(
-  colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
-
-# Plot
-max_expr <- 1.4
-min_expr <- -1.4
-macrophage_markers_dotplot <- merge(avg_exp, pct_exp) %>%
-  mutate(myeloid_functional = factor(myeloid_functional, levels = rev(levels(myeloid$myeloid_functional)))) %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_functional)) +
-  geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
-  geom_text(data = tmp_de, mapping = aes(x = variable, y = cluster, label = signif),
-            size = 8, fontface = 'bold', nudge_y = -0.09, nudge_x = 0.01) +
-  scale_size(range = c(0,11), limits = c(0,100)) +
-  scale_fill_gradientn(
-    colors = my_cols,
-    limits = c(min_expr, max_expr),
-    labels = c(min_expr, 0, max_expr),
-    breaks = c(min_expr, 0, max_expr),
-    na.value = my_cols[100]) +
-  scale_y_discrete(position = 'right') +
-  theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
-        strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
-        strip.placement = 'outside',
-        legend.background = element_rect(fill = NA),
-        legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 14, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
-        legend.margin = margin(5,0,10,0),
-        legend.box = 'vertical',
-        legend.box.margin = margin(0,0,-10,0),
-        legend.position = 'right',
-        legend.spacing.x = unit(x = 2, units = 'mm'),
-        panel.border = element_rect(fill = NA, size = 1),
-        panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'z-score', 
-                               barwidth = 1.25,
-                               barheight = 4,
-                               frame.colour = 'black', 
-                               frame.linewidth = 1.25,
-                               ticks.colour = 'black', 
-                               ticks.linewidth = 1.25,
-                               title.position = 'left'), 
-         size = guide_legend(title = '% expression', 
-                             override.aes = list(fill = 'black'),
-                             title.position = 'left'))
-macrophage_markers_dotplot
-ggsave(filename = './results/revision_figures/functional_names/macrophage_markers_dotplot.tiff',
-       plot = macrophage_markers_dotplot, device = 'tiff', height = 3.5, width = 8)
-
-
-# Macrophage DE markers heatmap ------------------------------------------------------
-
-Idents(myeloid) <- 'myeloid_subcluster'
-DefaultAssay(myeloid) <- 'RNA'
-
-# Subset cells
-macrophage <- c('Neutrophil',
-                'Monocyte',
-                'Macrophage-A',
-                'Macrophage-B',
-                'BA-Macrophage',
-                'Dendritic',
-                'Div-Myeloid')
 Idents(myeloid) <- 'myeloid_subcluster'
 macrophage <- subset(myeloid, idents = macrophage)
+
 
 # Use Seurat wilcox test
 macrophage_srat_genes <- FindAllMarkers(object = macrophage,
@@ -1195,7 +814,7 @@ write.table(file = paste0(results_out, 'macrophage_DE_wilcox.tsv'),
             x = macrophage_srat_genes, sep = '\t', row.names = TRUE, 
             col.names = NA)
 macrophage_srat_genes <- read.table(file = paste0(results_out, 'macrophage_DE_wilcox.tsv'),
-                                   sep = '\t', header = TRUE, row.names = 1)
+                                    sep = '\t', header = TRUE, row.names = 1)
 macrophage_de_genes <- macrophage_srat_genes %>%
   group_by(cluster) %>%
   top_n(n = 8, wt = avg_logFC) %>%
@@ -1209,88 +828,10 @@ expr_data <- t(ScaleData(object = macrophage@assays$RNA@data[macrophage_de_genes
   reshape2::melt(id.vars = 'myeloid_subcluster') %>%
   mutate(variable = factor(variable, levels = unique(variable)),
          myeloid_subcluster = factor(myeloid_subcluster, levels = rev(levels(myeloid_subcluster))))
-max_expr <- 2
-min_expr <- round(floor(min(expr_data$value)*10)/10,1)
-myColors <- rev(colorRampPalette(colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
-myBreaks <- c(seq(min(expr_data$value), 0, length.out = 50),
-              seq(max_expr/100, max_expr, length.out = 50))
-macrophage_de_genes_heatmap <- expr_data %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
-  geom_tile(mapping = aes(fill = value), color = 'black', size = 0.3) +
-  scale_fill_gradientn(colors = myColors,
-                       values = scales::rescale(x = myBreaks, to = c(0,1)),
-                       limits = c(min_expr, max_expr), 
-                       na.value = myColors[100],
-                       breaks = c(min_expr,0,max_expr)) +
-  scale_x_discrete(expand = c(0,0)) + 
-  scale_y_discrete(expand = c(0,0)) +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
-        legend.position = 'right',
-        legend.direction = 'vertical',
-        legend.title = element_text(color = 'black', angle = 90, size = 14, hjust = 0),
-        legend.text = element_text(size = 12, color = 'black'),
-        legend.box.margin=margin(0,0,0,0),
-        legend.margin = margin(0,0,0,-3, unit = 'mm')) +
-  guides(fill = guide_colorbar(title = 'Scaled Expression',
-                               title.position = 'left',
-                               frame.colour = 'black',
-                               ticks.colour = 'black',
-                               frame.linewidth = 1,
-                               ticks.linewidth = 1,
-                               title.hjust = 1))
-macrophage_de_genes_heatmap
-ggsave(filename = paste0(results_out, 'macrophage_de_genes_heatmap.tiff'),
-       plot = macrophage_de_genes_heatmap, device = 'tiff',
-       height = 3.5, width = 14)
-
-
-
-
-
-# Macrophage DE markers heatmap (functional annotation) ------------------------
-
-DefaultAssay(myeloid) <- 'RNA'
-macrophage <- c('Neutrophil',
-                'Monocyte',
-                'Chemotaxis-Inducing Mac',
-                'Inflammatory Mac',
-                'Border-Associated Mac',
-                'Dendritic',
-                'Dividing Myeloid')
-Idents(myeloid) <- 'myeloid_functional'
-macrophage <- subset(myeloid, idents = macrophage)
-
-
-# Use Seurat wilcox test
-macrophage_srat_genes <- FindAllMarkers(object = macrophage,
-                                        assay = 'RNA',
-                                        logfc.threshold = 0.25,
-                                        only.pos = TRUE)
-write.table(file = './results/revision_figures/functional_names/macrophage_DE_wilcox.tsv',
-            x = macrophage_srat_genes, sep = '\t', row.names = TRUE, 
-            col.names = NA)
-macrophage_srat_genes <- read.table(file = './results/revision_figures/functional_names/macrophage_DE_wilcox.tsv',
-                                    sep = '\t', header = TRUE, row.names = 1)
-macrophage_de_genes <- macrophage_srat_genes %>%
-  group_by(cluster) %>%
-  top_n(n = 8, wt = avg_logFC) %>%
-  .[['gene']]
-
-# Build heatmap
-expr_data <- t(ScaleData(object = macrophage@assays$RNA@data[macrophage_de_genes,])) %>%
-  cbind(macrophage@meta.data[c('myeloid_functional')]) %>%
-  group_by(myeloid_functional) %>%
-  summarise(across(.cols = all_of(macrophage_de_genes), .fns = mean)) %>%
-  reshape2::melt(id.vars = 'myeloid_functional') %>%
-  mutate(variable = factor(variable, levels = unique(variable)),
-         myeloid_functional = factor(myeloid_functional, levels = rev(levels(myeloid_functional))))
 
 expr_data$pval <- 1
 for (i in 1:nrow(macrophage_srat_genes)) {
-  tmp <- which(as.character(expr_data$myeloid_functional) == as.character(macrophage_srat_genes$cluster[i]) &
+  tmp <- which(as.character(expr_data$myeloid_subcluster) == as.character(macrophage_srat_genes$cluster[i]) &
                  as.character(expr_data$variable) == as.character(macrophage_srat_genes$gene[i]))
   expr_data$pval[tmp] <- macrophage_srat_genes$p_val_adj[i]
 }
@@ -1304,7 +845,7 @@ min_expr <- -2
 myColors <- rev(colorRampPalette(colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
 
 macrophage_de_genes_heatmap <- expr_data %>%
-  ggplot(mapping = aes(x = variable, y = myeloid_functional)) +
+  ggplot(mapping = aes(x = variable, y = myeloid_subcluster)) +
   geom_tile(mapping = aes(fill = value), color = 'black', size = 0.3) +
   geom_text(mapping = aes(label = significant)) +
   scale_fill_gradientn(colors = myColors,
@@ -1315,7 +856,7 @@ macrophage_de_genes_heatmap <- expr_data %>%
   scale_y_discrete(expand = c(0,0)) +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black', face = 'italic'),
         axis.text.y = element_text(size = 14, color = 'black'),
         legend.position = 'right',
         legend.direction = 'vertical',
@@ -1331,7 +872,7 @@ macrophage_de_genes_heatmap <- expr_data %>%
                                ticks.linewidth = 1,
                                title.hjust = 0.5))
 macrophage_de_genes_heatmap
-ggsave(filename = './results/revision_figures/functional_names/macrophage_de_genes_heatmap.tiff',
+ggsave(filename = paste0(results_out, 'macrophage_de_genes_heatmap.tiff'),
        plot = macrophage_de_genes_heatmap, device = 'tiff',
        height = 3.5, width = 14)
 
@@ -1432,83 +973,10 @@ dev.off()
 
 
 
-
-
-
-# Microglia population dynamics -------------------------------------------
-
-
-counts <- data.frame(table(myeloid$myeloid_subcluster, myeloid$time))
-names(counts) <- c('subcluster','time','count')
-count_these <- c('DAM-A',
-                 'DAM-B',
-                 'DAM-C',
-                 'H-Microglia')
-counts[['time']] <- plyr::mapvalues(
-  x = counts[['time']],
-  from = c('Uninjured'),
-  to = c('Uninj')
-)
-
-microglia_prop <- counts %>%
-  filter(subcluster %in% count_these) %>%
-  ggplot(mapping = aes(x = time, y = count, group = subcluster)) + 
-  geom_bar(aes(fill = subcluster), 
-           stat = 'identity', 
-           color = 'black', 
-           size = 0.75,
-           position = 'fill') + 
-  scale_y_continuous() + 
-  scale_x_discrete() +
-  scale_fill_manual(values = myeloid_cols) +
-  ylab('Prop. of cells') + 
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
-        axis.text.x = element_text(size = 12, color = 'black'),
-        axis.line = element_line(size = 1), 
-        panel.background = element_rect(fill = NA), 
-        axis.text.y = element_text(size = 12, color = 'black'), 
-        legend.title = element_blank(), 
-        legend.text = element_text(size = 12, color = 'black'),
-        legend.spacing.y = unit(x = 2.5, units = 'mm')) + 
-  guides(fill = guide_legend(ncol = 1))
-microglia_prop
-ggsave(filename = paste0(results_out, 'microglia_population_prop_dynamics.tiff'),
-       plot = microglia_prop, device = 'tiff', height = 2.75, width = 4.5)
-
-
-microglia_counts <- counts %>%
-  filter(subcluster %in% count_these) %>%
-  ggplot(mapping = aes(x = time, y = count, group = subcluster)) +
-  geom_bar(mapping = aes(fill = subcluster),
-           stat = 'identity',
-           color = 'black',
-           size = 0.75) +
-  scale_y_continuous(breaks = seq(0, 50000, 1000)) +
-  scale_x_discrete() +
-  scale_fill_manual(values = myeloid_cols) +
-  ylab(label = '# of cells') +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'),
-        axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 12, color = 'black'),
-        legend.position = 'none',
-        axis.line = element_line(size = 1),
-        panel.background = element_rect(fill = NA))
-microglia_legend <- cowplot::get_legend(plot = microglia_prop)
-microglia_pop <- cowplot::plot_grid(microglia_counts, microglia_prop + theme(legend.position = 'none'), ncol = 2, rel_widths = c(1, 1))
-microglia_pop <- cowplot::plot_grid(microglia_pop, microglia_legend, ncol = 2, rel_widths = c(1, 0.4))
-ggsave(filename = paste0(results_out, 'microglia_population_dynamics.tiff'),
-       plot = microglia_pop, device = 'tiff', height = 2.75, width = 7)
-
-
-
-
-
 # Microglia population dynamics (functional annotation) -----------------------
 
 
-counts <- data.frame(table(myeloid$myeloid_functional, myeloid$time))
+counts <- data.frame(table(myeloid$myeloid_subcluster, myeloid$time))
 names(counts) <- c('subcluster','time','count')
 count_these <- c('Homeostatic Microglia',
                  'Inflammatory Microglia',
@@ -1533,7 +1001,7 @@ microglia_prop <- counts %>%
   scale_fill_manual(values = myeloid_cols) +
   ylab('Prop. of cells') + 
   theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black'),
         axis.line = element_line(size = 1), 
         panel.background = element_rect(fill = NA), 
@@ -1543,106 +1011,17 @@ microglia_prop <- counts %>%
         legend.spacing.y = unit(x = 2.5, units = 'mm')) + 
   guides(fill = guide_legend(ncol = 1))
 microglia_prop
-ggsave(filename = './results/revision_figures/functional_names/microglia_population_prop_dynamics_functional.tiff',
+ggsave(filename = paste0(results_out, 'microglia_population_dynamics.tiff'),
        plot = microglia_prop, device = 'tiff', height = 2.75, width = 5.25)
 
 
-
-
-# Macrophage population dynamics -------------------------------------------
-
-
-counts <- data.frame(table(myeloid$myeloid_subcluster, myeloid$time))
-names(counts) <- c('subcluster','time','count')
-count_these <- c('Neutrophil',
-                 'Monocyte',
-                 'Macrophage-A',
-                 'Macrophage-B',
-                 'BA-Macrophage',
-                 'Dendritic',
-                 'Div-Myeloid')
-
-macrophage_prop <- counts %>%
-  filter(subcluster %in% count_these) %>%
-  filter(time != 'Uninjured') %>%
-  ggplot(mapping = aes(x = time, y = count, group = subcluster)) + 
-  geom_bar(aes(fill = subcluster), 
-           stat = 'identity', 
-           color = 'black', 
-           size = 0.75,
-           position = 'fill') + 
-  scale_y_continuous() + 
-  scale_x_discrete() +
-  scale_fill_manual(values = myeloid_cols) +
-  ylab('Prop. of cells') + 
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
-        axis.text.x = element_text(size = 12, color = 'black'),
-        axis.line = element_line(size = 1), 
-        panel.background = element_rect(fill = NA), 
-        axis.text.y = element_text(size = 12, color = 'black'), 
-        legend.title = element_blank(), 
-        legend.text = element_text(size = 12, color = 'black'),
-        legend.spacing.y = unit(x = 2.5, units = 'mm')) + 
-  guides(fill = guide_legend(ncol = 1))
-macrophage_prop
-ggsave(filename = paste0(results_out, 'macrophage_population_prop_dynamics.tiff'),
-       plot = macrophage_prop, device = 'tiff', height = 2.75, width = 4.5)
-
-macrophage_counts <- counts %>%
-  filter(subcluster %in% count_these) %>%
-  ggplot(mapping = aes(x = time, y = count, group = subcluster)) +
-  geom_bar(mapping = aes(fill = subcluster), 
-           stat = 'identity', 
-           color = 'black',
-           size = 0.75) +
-  scale_y_continuous(breaks = seq(0, 50000, 1000)) + 
-  scale_x_discrete() +
-  scale_fill_manual(values = myeloid_cols) +
-  ylab(label = '# of cells') +
-  theme(axis.title.x = element_blank(),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
-        axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 12, color = 'black'),
-        legend.position = 'none', 
-        axis.line = element_line(size = 1),
-        panel.background = element_rect(fill = NA))
-macrophage_prop <- counts %>%
-  filter(subcluster %in% count_these) %>%
-  filter(time != 'Uninjured') %>%
-  ggplot(mapping = aes(x = time, y = count, group = subcluster)) + 
-  geom_bar(aes(fill = subcluster), 
-           stat = 'identity', 
-           color = 'black', 
-           size = 0.75,
-           position = 'fill') + 
-  scale_y_continuous() + 
-  scale_x_discrete() +
-  scale_fill_manual(values = myeloid_cols) +
-  ylab('Prop. of cells') + 
-  theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
-        axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
-        axis.line = element_line(size = 1), 
-        panel.background = element_rect(fill = NA), 
-        axis.text.y = element_text(size = 12, color = 'black'), 
-        legend.title = element_blank(), 
-        legend.text = element_text(size = 12, color = 'black'),
-        legend.spacing.y = unit(x = 2.5, units = 'mm'),
-        legend.position = 'bottom') + 
-  guides(fill = guide_legend(ncol = 1))
-macrophage_legend <- cowplot::get_legend(plot = macrophage_prop)
-macrophage_pop <- cowplot::plot_grid(macrophage_counts, macrophage_prop + theme(legend.position = 'none'), ncol = 2, rel_widths = c(1, 1))
-macrophage_pop <- cowplot::plot_grid(macrophage_pop, macrophage_legend, ncol = 2, rel_widths = c(1, 0.4))
-ggsave(filename = paste0(results_out, 'macrophage_population_dynamics.tiff'),
-       plot = macrophage_pop, device = 'tiff', height = 2.75, width = 7)
 
 
 
 # Macrophage population dynamics (functional annotation) ----------------------
 
 
-counts <- data.frame(table(myeloid$myeloid_functional, myeloid$time))
+counts <- data.frame(table(myeloid$myeloid_subcluster, myeloid$time))
 names(counts) <- c('subcluster','time','count')
 count_these <- c('Neutrophil',
                  'Monocyte',
@@ -1666,7 +1045,7 @@ macrophage_prop <- counts %>%
   scale_fill_manual(values = myeloid_cols) +
   ylab('Prop. of cells') + 
   theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black'),
         axis.line = element_line(size = 1), 
         panel.background = element_rect(fill = NA), 
@@ -1676,7 +1055,7 @@ macrophage_prop <- counts %>%
         legend.spacing.y = unit(x = 2.5, units = 'mm')) + 
   guides(fill = guide_legend(ncol = 1))
 macrophage_prop
-ggsave(filename = './results/revision_figures/functional_names/macrophage_population_prop_dynamics.tiff',
+ggsave(filename = paste0(results_out, 'macrophage_population_dynamics.tiff'),
        plot = macrophage_prop, device = 'tiff', height = 2.75, width = 5.25)
 
 
@@ -1702,7 +1081,7 @@ myeloid_subcluster_counts_plot <- myeloid_subcluster_counts %>%
   ylab(label = 'Number of cells') +
   facet_wrap(. ~ myeloid_subcluster, scales = 'free_y', ncol = 5) +
   scale_fill_manual(values = time_cols) +
-  theme(plot.title = element_text(size = 14, color = 'black', face = 'bold'),
+  theme(plot.title = element_text(size = 14, color = 'black'),
         panel.border = element_rect(fill = NA, color = 'black'),
         strip.text = element_text(size = 12),
         axis.title.x = element_blank(),

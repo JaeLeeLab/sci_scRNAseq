@@ -1083,17 +1083,17 @@ mac_GO_mast_plot1 <- mac_go_mast_df %>%
                      limits = c(0, 15)) +
   scale_y_discrete(labels = function(x) sub("[^*_]+_", "", x)) +
   ylab(label = 'GO Term') +
-  xlab(label = 'log10(p-value)') +
+  xlab(label = '-log10(p-value)') +
   theme(panel.background = element_rect(fill = NA, color = 'black'),
         panel.border = element_rect(fill = NA, color = 'black'),
-        plot.title = element_text(size = 16, color = 'black'),
-        strip.text = element_text(size = 16, color = 'black'),
+        plot.title = element_text(size = 14, color = 'black'),
+        strip.text = element_text(size = 14, color = 'black'),
         strip.background = element_rect(color = 'black'),
         axis.title = element_text(size = 14, color = 'black'),
         axis.title.y = element_blank(),
-        axis.text = element_text(size = 12, color = 'black'),
+        axis.text = element_text(size = 14, color = 'black'),
         legend.title = element_text(size = 14, color = 'black'),
-        legend.text = element_text(size = 12, color = 'black'))
+        legend.text = element_text(size = 14, color = 'black'))
 
 mac_GO_mast_plot2 <- mac_go_mast_df %>%
   mutate('comparison' = plyr::mapvalues(
@@ -1114,18 +1114,102 @@ mac_GO_mast_plot2 <- mac_go_mast_df %>%
                      limits = c(0, 15)) +
   scale_y_discrete(labels = function(x) sub("[^*_]+_", "", x)) +
   ylab(label = 'GO Term') +
-  xlab(label = 'log10(p-value)') +
+  xlab(label = '-log10(p-value)') +
   theme(panel.background = element_rect(fill = NA, color = 'black'),
         panel.border = element_rect(fill = NA, color = 'black'),
-        plot.title = element_text(size = 16, color = 'black'),
-        strip.text = element_text(size = 16, color = 'black'),
+        plot.title = element_text(size = 14, color = 'black'),
+        strip.text = element_text(size = 14, color = 'black'),
         strip.background = element_rect(color = 'black'),
         axis.title = element_text(size = 14, color = 'black'),
         axis.title.y = element_blank(),
-        axis.text = element_text(size = 12, color = 'black'),
+        axis.text = element_text(size = 14, color = 'black'),
         legend.title = element_text(size = 14, color = 'black'),
-        legend.text = element_text(size = 12, color = 'black'))
+        legend.text = element_text(size = 14, color = 'black'))
 mac_GO_mast_plot <- mac_GO_mast_plot1 + mac_GO_mast_plot2
 mac_GO_mast_plot
-ggsave(filename = './results/revision_figures/functional_names/macrophage_GO_result.tiff',
-       plot = mac_GO_mast_plot, device = 'tiff', height = 4, width = 13)
+ggsave(filename = paste0(results_out, 'macrophage_GO_result.tiff'),
+       plot = mac_GO_mast_plot, device = 'tiff', height = 4, width = 14)
+
+
+
+# Microglia GO ------------------------------------------------------------
+
+
+mg_markers <- read.table(
+  file = 'results/myeloid_annotation_markers/microglia_DE_wilcox.tsv', 
+  sep = '\t',
+  header = TRUE,
+  row.names = 1
+)
+go_genes <- mg_markers %>%
+  mutate(pct.diff = pct.1 - pct.2) %>%
+  filter(pct.diff > 0) %>%
+  group_by(cluster)
+ensembl_convert <- read.table('ref/gene_name_conversion.tsv', sep = '\t', header = TRUE)
+go_genes$ensembl <- plyr::mapvalues(
+  x = go_genes$gene,
+  from = ensembl_convert$mgi_symbol,
+  to = ensembl_convert$ensembl_gene_id,
+  warn_missing = FALSE
+)
+write.csv(
+  x = go_genes,
+  file = paste0(results_out, 'microglia_go_genes.csv')
+)
+
+# Use gProfiler, use output
+mg_go_results <- readxl::read_xlsx(path = paste0(results_out, 'microglia_GO_terms.xlsx'))
+h_mg <- mg_go_results[c(1,2)]
+a_mg <- mg_go_results[c(4,5)]
+b_mg <- mg_go_results[c(7,8)]
+c_mg <- mg_go_results[c(10,11)]
+mg_go_results <- list('Homeostatic Microglia' = h_mg, 
+                      'Inflammatory Microglia' = a_mg, 
+                      'Dividing Microglia' = b_mg,
+                      'Migrating Microglia' = c_mg)
+for (i in 1:length(mg_go_results)) {
+  colnames(mg_go_results[[i]]) <- c('GO term', 'adj. p-value')
+  mg_go_results[[i]]$Cluster = names(mg_go_results)[i]
+  mg_go_results[[i]] <- mg_go_results[[i]][!apply(is.na(mg_go_results[[i]]), any, MARGIN = 1),]
+}
+mg_go_results <- Reduce(rbind, mg_go_results)
+mg_go_results$log_pval <- -log10(mg_go_results$`adj. p-value`)
+mg_go_results$tmp_id <- paste(
+  mg_go_results$Cluster,
+  mg_go_results$`GO term`,
+  sep = '_'
+)
+mg_go_results$Cluster <- factor(
+  x = mg_go_results$Cluster,
+  levels = c('Homeostatic Microglia','Inflammatory Microglia','Dividing Microglia','Migrating Microglia')
+)
+
+mg_go_plot <- mg_go_results %>%
+  group_by(Cluster) %>%
+  top_n(n = 15, wt = log_pval) %>%
+  ungroup() %>%
+  ggplot(mapping = aes(x = log_pval, y = reorder(tmp_id, log_pval))) +
+  geom_bar(fill = 'grey80', 
+           color = 'black', 
+           stat = 'identity') +
+  facet_wrap(. ~ Cluster, 
+             scales = 'free_y', 
+             drop = TRUE, 
+             ncol = 2, 
+             labeller = label_wrap_gen()) +
+  scale_x_continuous(breaks = seq(0, 100, 5)) +
+  scale_y_discrete(labels = function(x) sub("[^*_]+_", "", x)) +
+  ylab(label = 'GO Term') +
+  xlab(label = '-log10(adj. p-value)') +
+  theme(panel.background = element_rect(fill = NA, color = 'black'),
+        panel.border = element_rect(fill = NA, color = 'black'),
+        strip.text = element_text(size = 14, color = 'black'),
+        strip.background = element_rect(color = 'black'),
+        axis.title = element_text(size = 14, color = 'black'),
+        axis.title.y = element_blank(),
+        axis.text = element_text(size = 14, color = 'black'),
+        legend.title = element_text(size = 14, color = 'black'))
+mg_go_plot
+ggsave(filename = paste0(results_out, 'microglia_GO_plot.tiff'),
+       plot = mg_go_plot, device = 'tiff', height = 8, width = 14)
+

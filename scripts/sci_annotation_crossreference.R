@@ -244,7 +244,7 @@ umap_theme <- theme(panel.background = element_blank(),
                     axis.line = element_line(color = 'black'),
                     axis.text = element_blank(),
                     axis.ticks = element_blank(),
-                    axis.title = element_text(size = 16, color = 'black', face = 'bold'),
+                    axis.title = element_text(size = 16, color = 'black'),
                     legend.key = element_rect(fill = NA, color = NA),
                     legend.text = element_text(size = 12, color = 'black'))
 
@@ -260,7 +260,7 @@ tmp <- FetchData(object = sci, vars = c('UMAP_1','UMAP_2','ident')) %>%
   theme(legend.title = element_text(size = 12, color = 'black'),
         legend.box.margin = margin(0,0,0,-1, unit = 'cm')) +
   guides(color = guide_legend(title = 'Cell-type predictions\n(Rosenberg, Roco, et al. 2018)', override.aes = list(size = 5, alpha = 1))) 
-rosenberg_umap <- LabelClusters(plot = tmp, id = 'ident', repel = TRUE, size = 3.5)
+rosenberg_umap <- LabelClusters(plot = tmp, id = 'ident', repel = TRUE, size = 4)
 ggsave(filename = paste0(results_out, 'Rosenberg_predicted_annotation.tiff'),
        plot = rosenberg_umap, device = 'tiff', height = 5, width = 7.5)
 
@@ -360,7 +360,7 @@ umap_theme <- theme(panel.background = element_blank(),
                     axis.line = element_line(color = 'black'),
                     axis.text = element_blank(),
                     axis.ticks = element_blank(),
-                    axis.title = element_text(size = 16, color = 'black', face = 'bold'),
+                    axis.title = element_text(size = 16, color = 'black'),
                     legend.key = element_rect(fill = NA, color = NA),
                     legend.text = element_text(size = 12, color = 'black'))
 
@@ -383,9 +383,9 @@ celltype_umap <- FetchData(object = sci, vars = c('UMAP_1','UMAP_2','celltype'))
         legend.position = 'none') +
   guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
 
-exfig1 <- cowplot::plot_grid(celltype_umap, rosenberg_umap, sathyamurthy_umap, ncol = 1, align = 'hv', axis = 'ltbr')
+exfig1 <- cowplot::plot_grid(rosenberg_umap, sathyamurthy_umap, ncol = 1, align = 'hv', axis = 'ltbr')
 ggsave(filename = paste0(results_out, 'extendedFigure1_predictions.tiff'),
-       plot = exfig1, device = 'tiff', height = 15, width = 7.5)
+       plot = exfig1, device = 'tiff', height = 10, width = 7.5)
 
 
 

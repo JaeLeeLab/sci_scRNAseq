@@ -140,75 +140,10 @@ dev.off()
 
 
 
-
-
-# M1 marker only panel ----------------------------------------------------
-
-
-# M1 genes
-m1_markers <- c('Il1a','Il1b','Il6','Il12a','Il12b','Il23a','Il27','Tnf','Csf3','Csf2','Nfkbiz','Ccl1','Cxcl13','Ccl11','Cxcl2','Tnfaip3','Socs3','Peli1','Nos2','Marco')
-
-# Extract scaled expression values
-expr_data <- t(ScaleData(
-  object = myeloid[['RNAcorrected']]@data, 
-  features = c(m1_markers),
-  scale.max = 3
-))
-
-# metadata
-myeloid_meta <- myeloid@meta.data[c('myeloid_subcluster')]
-
-# Merge metadata and exprs values, then calculate avg across cell/time
-m1_data <- cbind(expr_data, myeloid_meta) %>%
-  group_by(myeloid_subcluster) %>%
-  summarise(across(.fns = mean)) %>%
-  tibble::column_to_rownames(var = 'myeloid_subcluster') %>%
-  as.matrix()
-
-
-# generate heatmap
-m1_heatmap <- Heatmap(
-  matrix = m1_data,
-  column_title = 'M1 gene expression',
-  col = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 10, name = "RdYlBu")), bias = 1.3)(100),
-  rect_gp = gpar(col = 'black', lwd = 0.5),
-  heatmap_legend_param = list(
-    title = 'Scaled Expression',
-    title_gp = gpar(fontsize = 12),
-    title_position = 'topcenter',
-    labels = c('Low',0, 'High'),
-    at = c(min(m1_data), 0, max(m1_data)),
-    labels_gp = gpar(fontsize = 10),
-    legend_height = unit(2.5, units = 'cm'),
-    grid_width = unit(0.5, units = 'cm'),
-    border = 'black',
-    title_gap = unit(3, units = 'cm'),
-    column_gap = unit(5, "mm"),
-    row_gap = unit(5, 'mm'),
-    direction = 'horizontal'),
-  use_raster = TRUE,
-  clustering_method_columns = 'ward.D2',
-  clustering_method_rows = 'ward.D2',
-  clustering_distance_columns = 'spearman',
-  clustering_distance_rows = 'spearman',
-  show_column_names = TRUE,
-  column_names_rot = 45,
-  column_names_gp = gpar(fontsize = 12)
-)
-
-# save
-tiff(filename = paste0(results_out, 'myeloid_M1_heatmap.tiff'),
-     height = 4.5, width = 6, units = 'in', res = 440)
-draw(m1_heatmap, heatmap_legend_side = 'bottom')
-dev.off()
-
-
-
-
 # M1 marker only panel (functional annotation) ---------------------------------
 
 
-myeloid@meta.data[['myeloid_functional']] <- plyr::mapvalues(
+myeloid@meta.data[['myeloid_subcluster']] <- plyr::mapvalues(
   x = myeloid@meta.data[['integrated_snn_res.0.35']],
   from = levels(myeloid@meta.data[['integrated_snn_res.0.35']]),
   to = c('Homeostatic Microglia',
@@ -224,8 +159,8 @@ myeloid@meta.data[['myeloid_functional']] <- plyr::mapvalues(
          'Dividing Myeloid',
          'Border-Associated Mac')
 )
-myeloid@meta.data[['myeloid_functional']] <- factor(
-  x = myeloid@meta.data[['myeloid_functional']],
+myeloid@meta.data[['myeloid_subcluster']] <- factor(
+  x = myeloid@meta.data[['myeloid_subcluster']],
   levels = c('Neutrophil',
              'Monocyte',
              'Chemotaxis-Inducing Mac',
@@ -251,16 +186,16 @@ expr_data <- t(ScaleData(
 ))
 
 # metadata
-myeloid_meta <- myeloid@meta.data[c('myeloid_functional')]
+myeloid_meta <- myeloid@meta.data[c('myeloid_subcluster')]
 
 # Merge metadata and exprs values, then calculate avg across cell/time
 m1_data <- cbind(expr_data, myeloid_meta) %>%
-  group_by(myeloid_functional) %>%
+  group_by(myeloid_subcluster) %>%
   summarise(across(.fns = mean)) %>%
-  tibble::column_to_rownames(var = 'myeloid_functional') %>%
+  tibble::column_to_rownames(var = 'myeloid_subcluster') %>%
   as.matrix()
 
-Idents(myeloid) <- 'myeloid_functional'
+Idents(myeloid) <- 'myeloid_subcluster'
 DefaultAssay(myeloid) <- 'RNA'
 tmp <- FindAllMarkers(
   object = myeloid,
@@ -299,12 +234,13 @@ m1_heatmap <- Heatmap(
   clustering_distance_rows = 'spearman',
   show_column_names = TRUE,
   column_names_rot = 45,
-  column_names_gp = gpar(fontsize = 12)
+  column_names_gp = gpar(fontsize = 12, fontface = 'italic'),
+  row_names_gp = gpar(fontsize = 12)
 )
 
 # save
-tiff(filename = './results/revision_figures/functional_names/myeloid_M1_heatmap.tiff',
-     height = 4.5, width = 6.75, units = 'in', res = 440)
+tiff(filename = paste0(results_out, 'myeloid_M1_heatmap.tiff'),
+     height = 4.5, width = 7, units = 'in', res = 440)
 draw(m1_heatmap, heatmap_legend_side = 'bottom')
 dev.off()
 
@@ -312,9 +248,40 @@ dev.off()
 
 
 
+# M2 marker only panel (functional annotation) --------------------------------
 
 
-# M2 marker only panel ----------------------------------------------------
+myeloid@meta.data[['myeloid_subcluster']] <- plyr::mapvalues(
+  x = myeloid@meta.data[['integrated_snn_res.0.35']],
+  from = levels(myeloid@meta.data[['integrated_snn_res.0.35']]),
+  to = c('Homeostatic Microglia',
+         'Inflammatory Microglia',
+         'Chemotaxis-Inducing Mac',
+         'Dividing Microglia',
+         'Inflammatory Mac',
+         'Monocyte',
+         'Neutrophil',
+         'Migrating Microglia',
+         'Dendritic',
+         'Interferon Myeloid',
+         'Dividing Myeloid',
+         'Border-Associated Mac')
+)
+myeloid@meta.data[['myeloid_subcluster']] <- factor(
+  x = myeloid@meta.data[['myeloid_subcluster']],
+  levels = c('Neutrophil',
+             'Monocyte',
+             'Chemotaxis-Inducing Mac',
+             'Inflammatory Mac',
+             'Border-Associated Mac',
+             'Dendritic',
+             'Dividing Myeloid',
+             'Homeostatic Microglia',
+             'Inflammatory Microglia',
+             'Dividing Microglia',
+             'Migrating Microglia',
+             'Interferon Myeloid')
+)
 
 # M2 genes
 m2_markers <- c('Retnla','Clec10a','Ccl17','Ccl24','Irf4','Chil3','Mrc1','Arg1','Rnase2a','Ear2','Ccl8','Pdcd1lg2','Socs2','Cdh1','Ppard','Pparg','Ccl22')
@@ -336,100 +303,7 @@ m2_data <- cbind(expr_data, myeloid_meta) %>%
   tibble::column_to_rownames(var = 'myeloid_subcluster') %>%
   as.matrix()
 
-# generate heatmap
-m2_heatmap <- Heatmap(
-  matrix = m2_data,
-  column_title = 'M2 gene expression',
-  col = colorRampPalette(rev(RColorBrewer::brewer.pal(n = 10, name = "RdYlBu")), bias = 2.2)(100),
-  rect_gp = gpar(col = 'black', lwd = 0.5),
-  heatmap_legend_param = list(
-    title = 'Scaled Expression',
-    title_gp = gpar(fontsize = 12),
-    title_position = 'topcenter',
-    labels = c('Low',0, 'High'),
-    at = c(min(m2_data), 0, max(m2_data)),
-    labels_gp = gpar(fontsize = 10),
-    legend_height = unit(2.5, units = 'cm'),
-    grid_width = unit(0.5, units = 'cm'),
-    border = 'black',
-    title_gap = unit(3, units = 'cm'),
-    column_gap = unit(5, "mm"),
-    row_gap = unit(5, 'mm'),
-    direction = 'horizontal'),
-  use_raster = TRUE,
-  clustering_method_columns = 'ward.D2',
-  clustering_method_rows = 'ward.D2',
-  clustering_distance_columns = 'spearman',
-  clustering_distance_rows = 'spearman',
-  show_column_names = TRUE,
-  column_names_rot = 45,
-  column_names_gp = gpar(fontsize = 12)
-)
-
-# save
-tiff(filename = paste0(results_out, 'myeloid_M2_heatmap.tiff'),
-     height = 4.5, width = 6, units = 'in', res = 440)
-draw(m2_heatmap, heatmap_legend_side = 'bottom')
-dev.off()
-
-
-
-# M2 marker only panel (functional annotation) --------------------------------
-
-myeloid@meta.data[['myeloid_functional']] <- plyr::mapvalues(
-  x = myeloid@meta.data[['integrated_snn_res.0.35']],
-  from = levels(myeloid@meta.data[['integrated_snn_res.0.35']]),
-  to = c('Homeostatic Microglia',
-         'Inflammatory Microglia',
-         'Chemotaxis-Inducing Mac',
-         'Dividing Microglia',
-         'Inflammatory Mac',
-         'Monocyte',
-         'Neutrophil',
-         'Migrating Microglia',
-         'Dendritic',
-         'Interferon Myeloid',
-         'Dividing Myeloid',
-         'Border-Associated Mac')
-)
-myeloid@meta.data[['myeloid_functional']] <- factor(
-  x = myeloid@meta.data[['myeloid_functional']],
-  levels = c('Neutrophil',
-             'Monocyte',
-             'Chemotaxis-Inducing Mac',
-             'Inflammatory Mac',
-             'Border-Associated Mac',
-             'Dendritic',
-             'Dividing Myeloid',
-             'Homeostatic Microglia',
-             'Inflammatory Microglia',
-             'Dividing Microglia',
-             'Migrating Microglia',
-             'Interferon Myeloid')
-)
-
-
-# M2 genes
-m2_markers <- c('Retnla','Clec10a','Ccl17','Ccl24','Irf4','Chil3','Mrc1','Arg1','Rnase2a','Ear2','Ccl8','Pdcd1lg2','Socs2','Cdh1','Ppard','Pparg','Ccl22')
-
-# Extract scaled expression values
-expr_data <- t(ScaleData(
-  object = myeloid[['RNAcorrected']]@data, 
-  features = c(m2_markers),
-  scale.max = 3
-))
-
-# metadata
-myeloid_meta <- myeloid@meta.data[c('myeloid_functional')]
-
-# Merge metadata and exprs values, then calculate avg across cell/time
-m2_data <- cbind(expr_data, myeloid_meta) %>%
-  group_by(myeloid_functional) %>%
-  summarise(across(.fns = mean)) %>%
-  tibble::column_to_rownames(var = 'myeloid_functional') %>%
-  as.matrix()
-
-Idents(myeloid) <- 'myeloid_functional'
+Idents(myeloid) <- 'myeloid_subcluster'
 DefaultAssay(myeloid) <- 'RNA'
 tmp <- FindAllMarkers(
   object = myeloid,
@@ -468,11 +342,12 @@ m2_heatmap <- Heatmap(
   clustering_distance_rows = 'spearman',
   show_column_names = TRUE,
   column_names_rot = 45,
-  column_names_gp = gpar(fontsize = 12)
+  column_names_gp = gpar(fontsize = 12, fontface = 'italic'),
+  row_names_gp = gpar(fontsize = 12)
 )
 
 # save
-tiff(filename = './results/revision_figures/functional_names/myeloid_M2_heatmap.tiff',
+tiff(filename = paste0(results_out, 'myeloid_M2_heatmap.tiff'),
      height = 4.5, width = 6.75, units = 'in', res = 440)
 draw(m2_heatmap, heatmap_legend_side = 'bottom')
 dev.off()

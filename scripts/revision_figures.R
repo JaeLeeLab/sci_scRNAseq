@@ -748,24 +748,76 @@ ggsave(filename = './results/revision_figures/cellCycleRegressionComparison_sci-
 
 myeloid <- readRDS('data/myeloid.rds')
 DefaultAssay(myeloid) <- 'integrated'
-myeloid <- FindClusters(myeloid, resolution = 0.8)
+myeloid <- FindClusters(myeloid, resolution = 0.35)
+myeloid$myeloid_subcluster <- plyr::mapvalues(
+  x = myeloid$myeloid_subcluster,
+  from = c('Neutrophil',
+                'Monocyte',
+                'Macrophage-A',
+                'Macrophage-B',
+                'BA-Macrophage',
+                'Dendritic',
+                'Div-Myeloid',
+                'H-Microglia',
+                'DAM-A',
+                'DAM-B',
+                'DAM-C',
+                'IFN-Myeloid'),
+  to = c('Neutrophil',
+         'Monocyte',
+         'Chemotaxis-Inducing Mac',
+         'Inflammatory Mac',
+         'Border-Associated Mac',
+         'Dendritic',
+         'Dividing Myeloid',
+         'Homeostatic Microglia',
+         'Inflammatory Microglia',
+         'Dividing Microglia',
+         'Migrating Microglia',
+         'Interferon Myeloid')
+)
 
 myeloid_unscaled <- ScaleData(myeloid)
 myeloid_unscaled <- RunPCA(myeloid_unscaled, npcs = 30)
 ElbowPlot(myeloid_unscaled, ndims = 30)
 myeloid_unscaled <- FindNeighbors(myeloid_unscaled, dims = 1:11)
 myeloid_unscaled <- RunUMAP(myeloid_unscaled, dims = 1:11)
-myeloid_unscaled <- FindClusters(myeloid_unscaled, resolution = 0.8)
+myeloid_unscaled <- FindClusters(myeloid_unscaled, resolution = 0.35)
 
+myeloid_cols <- c('#800000', 
+                  '#9a6324',
+                  '#e6194b', 
+                  '#f58231', 
+                  '#CCCC00',
+                  '#808000', 
+                  '#3cb44b',
+                  '#008080', 
+                  'cyan3', 
+                  '#4363d8',
+                  '#000075', 
+                  '#911eb4')
+names(myeloid_cols) <- c('Neutrophil',
+                         'Monocyte',
+                         'Chemotaxis-Inducing Mac',
+                         'Inflammatory Mac',
+                         'Border-Associated Mac',
+                         'Dendritic',
+                         'Dividing Myeloid',
+                         'Homeostatic Microglia',
+                         'Inflammatory Microglia',
+                         'Dividing Microglia',
+                         'Migrating Microglia',
+                         'Interferon Myeloid')
 p1 <- lapply(
   X = DimPlot(
     object = myeloid, 
-    group.by = c('myeloid_subcluster','integrated_snn_res.0.8','Phase'),
+    group.by = c('myeloid_subcluster','integrated_snn_res.0.35','Phase'),
     label = TRUE,
     combine = FALSE
   ),
   FUN = function(x) x + theme_bw()
 )
+p1[[1]] <- p1[[1]] + scale_color_manual(values = myeloid_cols)
 p1[1:2] <- lapply(X = p1[1:2], FUN = function(x) x + NoLegend())
 p1 <- Reduce(
   f = `+`,
@@ -774,12 +826,13 @@ p1 <- Reduce(
 p2 <- lapply(
   X = DimPlot(
     object = myeloid_unscaled, 
-    group.by = c('myeloid_subcluster','integrated_snn_res.0.8','Phase'),
+    group.by = c('myeloid_subcluster','integrated_snn_res.0.35','Phase'),
     label = TRUE,
     combine = FALSE
   ),
   FUN = function(x) x + theme_bw()
 )
+p2[[1]] <- p2[[1]] + scale_color_manual(values = myeloid_cols)
 p2[1:2] <- lapply(X = p2[1:2], FUN = function(x) x + NoLegend())
 p2 <- Reduce(
   f = `+`,
@@ -1295,7 +1348,7 @@ ggsave(filename = './results/revision_figures/vascular_bySample_umap.tiff',
 rm(vascular); gc()
 
 
-# Vascular UMAP by sample ------------------------------------------------------
+# Macroglia UMAP by sample ------------------------------------------------------
 
 macroglia <- readRDS(file = './data/macroglia.rds')
 
@@ -2190,9 +2243,10 @@ plot_lr <- function(x, split = FALSE, max_score = NULL) {
     ylab(label = 'Ligand_Receptor Pair') +
     xlab(label = 'Ligand Cell') +
     theme_bw() +
-    theme(axis.text.x.top = element_text(angle = 45, hjust = 0),
+    theme(axis.text.x.top = element_text(angle = 45, hjust = 0, size = 12),
           strip.text = element_text(size = 12),
-          strip.background = element_rect(fill = NA, color = NA)) +
+          strip.background = element_rect(fill = NA, color = NA),
+          axis.text.y.left = element_text(size = 11, face = 'italic')) +
     guides(fill = guide_colorbar(frame.colour = 'black', 
                                   ticks.colour = 'black'),
            size = guide_legend(title = '-Log10(p-value)',

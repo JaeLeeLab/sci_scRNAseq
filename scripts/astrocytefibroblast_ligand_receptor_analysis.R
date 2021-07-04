@@ -199,7 +199,7 @@ astrofibro_plot <- astrofibro_result_subset %>%
   mutate(LR_pair = factor(x = LR_pair, levels = rev(tmp_order))) %>%
   mutate(Ligand_cell = plyr::mapvalues(x = Ligand_cell,
                                        from = c('Macrophage-A','Macrophage-B'),
-                                       to = c('Mac-A','Mac-B'))) %>%
+                                       to = c('Chemo','Inflam'))) %>%
   ggplot(mapping = aes(x = Ligand_cell, y = LR_pair)) +
   geom_point(mapping = aes(size = log_pval, fill = Score), color = 'black', pch = 21) +
   ggh4x::facet_nested(. ~ time + Receptor_cell, switch = 'x') +
@@ -210,14 +210,14 @@ astrofibro_plot <- astrofibro_result_subset %>%
   scale_radius(limits = c(0,3)) +
   scale_fill_gradientn(colors = rev(RColorBrewer::brewer.pal(n = 10, name = 'Spectral')),
                        limits = c(0,NA)) +
-  theme(strip.text = element_text(size = 12, color = 'black', face = 'bold'),
+  theme(strip.text = element_text(size = 14, color = 'black'),
         strip.background = element_rect(fill = NA, color = 'black'),
-        axis.title.x.top = element_text(size = 12, color = 'black', face = 'bold'),
-        axis.title.y.right = element_text(size = 12, color = 'black', face = 'bold', hjust = 0.25),
-        axis.text = element_text(size = 12, color = 'black'),
-        axis.text.x = element_text(size = 12, angle = 45, hjust = 0, face = 'bold'),
-        legend.text = element_text(size = 12, color = 'black'),
-        legend.title = element_text(size = 12, color = 'black', face = 'bold', angle = 90),
+        axis.title.x.top = element_text(size = 14, color = 'black'),
+        axis.title.y.right = element_text(size = 14, color = 'black', hjust = 0.25),
+        axis.text.y.right = element_text(size = 14, color = 'black', face = 'italic'),
+        axis.text.x = element_text(size = 15, angle = 45, hjust = 0),
+        legend.text = element_text(size = 14, color = 'black'),
+        legend.title = element_text(size = 14, color = 'black', angle = 90),
         legend.key = element_rect(fill = NA),
         legend.position = 'right',
         legend.justification = c(1,0),
@@ -241,15 +241,14 @@ astrofibro_plot <- cowplot::plot_grid(
   astrofibro_plot,
   cowplot::ggdraw() + 
     cowplot::draw_text(text = 'Receptor-expressing cell',
-                       fontface = 'bold',
-                       size = 12,
+                       size = 14,
                        hjust = 1.05),
   ncol = 1,
   rel_heights = c(1,0.05)
 )
 astrofibro_plot
 ggsave(filename = paste0(results_out, 'AstrocyteFibroblast_MacrophageLigand_LRplot.tiff'),
-       plot = astrofibro_plot, device = 'tiff', height = 7.5, width = 5.75)
+       plot = astrofibro_plot, device = 'tiff', height = 8, width = 6.25)
 
 
 
@@ -294,14 +293,14 @@ astrofibro_plot <- astrofibro_result %>%
   scale_x_discrete(position = 'top') +
   ggh4x::facet_nested(. ~ time + Receptor_cell, switch = 'x') +
   scale_color_gradientn(colors = rev(RColorBrewer::brewer.pal(n = 10, name = 'Spectral'))) +
-  theme(strip.text = element_text(size = 12, color = 'black', face = 'bold'),
+  theme(strip.text = element_text(size = 12, color = 'black'),
         strip.background = element_rect(fill = NA, color = 'black'),
-        axis.title.x.top = element_text(size = 12, color = 'black', face = 'bold'),
-        axis.title.y.right = element_text(size = 12, color = 'black', face = 'bold'),
+        axis.title.x.top = element_text(size = 12, color = 'black'),
+        axis.title.y.right = element_text(size = 12, color = 'black'),
         axis.text = element_text(size = 12, color = 'black'),
         axis.text.x = element_text(size = 12, angle = 45, hjust = 0),
         legend.text = element_text(size = 12, color = 'black'),
-        legend.title = element_text(size = 12, color = 'black', face = 'bold'),
+        legend.title = element_text(size = 12, color = 'black'),
         legend.key = element_rect(fill = NA),
         panel.background = element_rect(fill = NA, color = 'black'),
         panel.grid.major = element_line(size = 0.5, linetype = 'dotted', color = 'grey70')) +

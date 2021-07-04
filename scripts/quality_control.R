@@ -512,8 +512,8 @@ rm(list = ls())
 
 # For resubmission --------------------------------------------------------
 
-qc_theme <- theme(axis.text.x = element_text(angle = 45, size = 12, hjust = 1, color = 'black'),
-                  axis.text.y = element_text(size = 12, color = 'black'),
+qc_theme <- theme(axis.text.x = element_text(angle = 45, size = 14, hjust = 1, color = 'black'),
+                  axis.text.y = element_text(size = 14, color = 'black'),
                   axis.title.x = element_blank(),
                   axis.title.y = element_text(size = 14, color = 'black'),
                   panel.background = element_rect(fill = NA, color = 'black'),
@@ -551,6 +551,21 @@ percent_mt_plot <- sci@meta.data %>%
   ylab(label = 'Mitochondrial [mt-] %') +
   qc_theme
 
-qc_plot <- umi_plot + n_genes_plot + percent_mt_plot
+qc_plot <- umi_plot / n_genes_plot / percent_mt_plot
 ggsave(filename = './results/revision_figures/qc_plot.tiff',
-       plot = qc_plot, height = 4, width = 14)
+       plot = qc_plot, height = 9, width = 4)
+
+qc_dat <- sci@meta.data[c('sample_id','percent_mt','n_genes','library_size')]
+colnames(qc_dat)[2:4] <- c('Mito %', '# unique genes', '# UMI')
+qc_plot <- qc_dat %>%
+  reshape2::melt(id.vars = c('sample_id')) %>%
+  ggplot(mapping = aes(x = sample_id, y = value)) +
+  geom_violin(mapping = aes(fill = sample_id), scale = 'width') +
+  facet_wrap(. ~ variable, scales = 'free_y', ncol = 1) +
+  scale_y_continuous(trans = 'log10') +
+  qc_theme +
+  theme(strip.background = element_rect(fill = NA),
+        strip.text = element_text(size = 14),
+        axis.title.y = element_blank())
+ggsave(filename = './results/revision_figures/qc_plot.tiff',
+       plot = qc_plot, height = 7, width = 3.75)

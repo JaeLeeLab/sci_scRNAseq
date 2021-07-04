@@ -74,7 +74,7 @@ for (ii in 1:length(unlist(addtl_markers, use.names = FALSE))) {
                                 'y_pos' = label_y),
               mapping = aes(x = x_pos, y = y_pos, label = gene),
               fontface = 'italic',
-              size = 7,
+              size = 8,
               hjust = 0) +
     scale_color_gradientn(colors = expr_colors,
                           breaks = c(0, max_expr),
@@ -89,7 +89,7 @@ for (ii in 1:length(unlist(addtl_markers, use.names = FALSE))) {
           legend.background = element_rect(fill = NA),
           legend.key.size = unit(0.25, units = 'cm'), 
           legend.spacing.x = unit(0.1, units = 'cm'),
-          legend.text = element_text(size = 12, color = 'black')) +
+          legend.text = element_text(size = 16, color = 'black')) +
     guides(color = guide_colorbar(frame.colour = 'black', 
                                   ticks = FALSE,
                                   barwidth = 0.8,
@@ -112,7 +112,7 @@ ggsave(filename = paste0(results_out, 'addtl_markers_umap.tiff'),
 # combinations. 
 rna_sce <- as.SingleCellExperiment(vascular, assay = 'RNA')
 markers_time <- findMarkers(x = rna_sce,
-                            groups = colData(rna_sce)[['integrated_snn_res.0.3']],
+                            groups = colData(rna_sce)[['integrated_snn_res.0.2']],
                             test.type = 'wilcox',
                             direction = 'up',
                             pval.type = 'all',
@@ -156,12 +156,11 @@ seurat_markers_top <- seurat_markers %>%
 vascular@meta.data[['vascular_subcluster']] <- plyr::mapvalues(
   x = vascular@meta.data[['vascular_subcluster']],
   from = levels(vascular@meta.data[['vascular_subcluster']]),
-  to = c('C1-Endothelial',
-         'C2-Endothelial',
+  to = c('C-Endothelial',
          'Tip Cell',
-         'V-Endothelial',
          'U-Vascular',
          'A-Endothelial',
+         'V-Endothelial',
          'Fibroblast',
          'Pericyte',
          'VSMC')
@@ -169,8 +168,7 @@ vascular@meta.data[['vascular_subcluster']] <- plyr::mapvalues(
 vascular@meta.data[['vascular_subcluster']] <- factor(
   x = vascular@meta.data[['vascular_subcluster']],
   levels = c('A-Endothelial',
-             'C1-Endothelial',
-             'C2-Endothelial',
+             'C-Endothelial',
              'V-Endothelial',
              'Tip Cell',
              'Pericyte',
@@ -193,9 +191,8 @@ write.table(x = vascular@meta.data['vascular_subcluster'],
 
 # join fibroblasts
 vascular_cols <- c('A-Endothelial' = '#800000',
-                   'C1-Endothelial' = '#e6194b',
-                   'C2-Endothelial' = '#f58231',
-                   'V-Endothelial' = '#808000',
+                   'C-Endothelial' = '#e6194b',
+                   'V-Endothelial' = '#f58231',
                    'Tip Cell' = '#3cb44b',
                    'Pericyte' = '#008080',
                    'VSMC' = '#000075',
@@ -213,10 +210,10 @@ umap_theme <- theme(panel.background = element_blank(),
                     axis.line = element_line(color = 'black'),
                     axis.text = element_blank(),
                     axis.ticks = element_blank(),
-                    axis.title = element_text(size = 18, color = 'black', face = 'bold'),
-                    legend.title = element_text(size = 14, color = 'black', face = 'bold'),
+                    axis.title = element_text(size = 16, color = 'black'),
+                    legend.title = element_text(size = 16, color = 'black'),
                     legend.key = element_rect(fill = NA, color = NA),
-                    legend.text = element_text(size = 14, color = 'black'))
+                    legend.text = element_text(size = 16, color = 'black'))
 
 # cell-type annotation UMAP 
 vascular_subcluster_counts <- table(vascular$vascular_subcluster)
@@ -247,92 +244,10 @@ vascular_subcluster_split_umap <- FetchData(vascular, vars = c('UMAP_1','UMAP_2'
   facet_wrap(. ~ time, ncol = 2) +
   scale_color_manual(values = vascular_cols, breaks = names(vascular_subcluster_label), label = vascular_subcluster_label) +
   umap_theme +
-  theme(strip.text = element_text(size = 14, color = 'black')) +
+  theme(strip.text = element_text(size = 16, color = 'black')) +
   guides(color = guide_legend(title = 'Cell-type (#)', override.aes = list(size = 8, alpha = 1)))
 ggsave(filename = paste0(results_out, 'vascular_subcluster_annotation_split_umap.tiff'),
        plot = vascular_subcluster_split_umap, device = 'tiff', height = 6, width = 9)
-
-
-# DE markers dot plot -----------------------------------------------------
-
-de_markers <- c('A-Endothelial1' = 'Gkn3',
-                'A-Endothelial2' = 'Stmn2',
-                'Endothelial1' = 'Cldn5',
-                'Endothelial2' = 'Ly6a',
-                'V-Endothelial1' = 'Slc38a5',
-                'V-Endothelial2' = 'Icam1',
-                'Tip Cell' = 'Apln',
-                'Pericyte' = 'Kcnj8',
-                'VSMC' = 'Tagln',
-                'Fibroblast'= 'Col1a1')
-
-
-DefaultAssay(vascular) <- 'RNA'
-avg_exp <- data.frame(t(ScaleData(vascular[['RNA']]@data, features = de_markers)))
-avg_exp <- cbind(avg_exp, 'vascular_subcluster' = as.character(vascular@meta.data[,c('vascular_subcluster')])) %>%
-  reshape2::melt(id.vars = c('vascular_subcluster')) %>%
-  group_by(vascular_subcluster, variable) %>%
-  summarise(avg.exp = mean(value))
-pct_exp <- data.frame(t(vascular[['RNA']]@counts[unlist(de_markers, use.names = FALSE),]))
-pct_exp <- cbind(pct_exp, 'vascular_subcluster' = as.character(vascular@meta.data[,c('vascular_subcluster')])) %>%
-  reshape2::melt(id.vars = c('vascular_subcluster')) %>%
-  group_by(vascular_subcluster, variable) %>%
-  summarise(pct.exp = mean(value > 0) * 100)
-my_cols <- rev(colorRampPalette(
-  colors = RColorBrewer::brewer.pal(n = 9, name = 'RdBu'))(100))
-
-
-min_expr <- floor(min(avg_exp$avg.exp)*10)/10
-# max_exp <- ceiling(max(avg_exp$avg.exp)*10)/10
-max_expr <- 3
-de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
-  filter(vascular_subcluster != 'U-Vascular') %>%
-  mutate(vascular_subcluster = factor(vascular_subcluster, levels = rev(levels(vascular$vascular_subcluster)))) %>%
-  ggplot(mapping = aes(x = variable, y = vascular_subcluster)) +
-  geom_point(mapping = aes(size = pct.exp, fill = avg.exp), color = 'black', pch = 21) +
-  # facet_grid(vascular_subcluster ~ ., drop = TRUE, switch = 'y') +
-  scale_size(range = c(0,12), limits = c(0,100)) +
-  scale_fill_gradientn(
-    colors = my_cols,
-    limits = c(min_expr, max_expr),
-    labels = c(min_expr, 0, max_expr),
-    breaks = c(min_expr, 0, max_expr),
-    na.value = my_cols[100]) +
-  scale_y_discrete(position = 'right') +
-  theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
-        axis.title.x = element_blank(),
-        axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
-        axis.text.y = element_text(size = 14, color = 'black'),
-        strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
-        strip.placement = 'outside',
-        legend.background = element_rect(fill = NA),
-        legend.key = element_rect(fill = NA),
-        legend.text = element_text(size = 14, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
-        legend.margin = margin(0,0,0,0),
-        legend.box = 'vertical',
-        legend.position = 'right',
-        legend.spacing.x = unit(x = 2, units = 'mm'),
-        panel.border = element_rect(fill = NA, size = 1),
-        panel.background = element_rect(fill = NA)) +
-  guides(fill = guide_colorbar(title = 'Scaled\nexpression', 
-                               barwidth = 1.25,
-                               barheight = 4,
-                               frame.colour = 'black', 
-                               frame.linewidth = 1.25,
-                               ticks.colour = 'black', 
-                               ticks.linewidth = 1.25,
-                               title.position = 'left'), 
-         size = guide_legend(title = '% expression', 
-                             override.aes = list(fill = 'black'),
-                             title.position = 'left'))
-de_markers_dotplot
-ggsave(filename = paste0(results_out, 'vascular_subcluster_markers_dotplot.tiff'),
-       plot = de_markers_dotplot, device = 'tiff', height = 3.75, width = 7.25)
-
-
 
 
 
@@ -401,15 +316,12 @@ de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
   theme(plot.margin = margin(0, 0, 0, 20, unit = 'mm'),
         axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black'),
+        axis.text.x = element_text(angle = 45, hjust = 1, size = 14, color = 'black', face = 'italic'),
         axis.text.y = element_text(size = 14, color = 'black'),
-        strip.background = element_rect(fill = NA, colour = NA),
-        strip.text.y.left = element_text(angle = 0, hjust = 1, face = 'bold', size = 20, color = 'black'),
-        strip.placement = 'outside',
         legend.background = element_rect(fill = NA),
         legend.key = element_rect(fill = NA),
         legend.text = element_text(size = 14, color = 'black', hjust = 0),
-        legend.title = element_text(size = 16, angle = 90, color = 'black', hjust = 0.5),
+        legend.title = element_text(size = 14, angle = 90, color = 'black', hjust = 0.5),
         legend.margin = margin(0,0,0,0),
         legend.box = 'vertical',
         legend.position = 'right',
@@ -428,7 +340,7 @@ de_markers_dotplot <- merge(avg_exp, pct_exp) %>%
                              override.aes = list(fill = 'black'),
                              title.position = 'left'))
 de_markers_dotplot
-ggsave(filename = './results/revision_figures/vascular_subcluster_markers_dotplot.tiff',
+ggsave(filename = paste0(results_out, 'vascular_subcluster_markers_dotplot.tiff'),
        plot = de_markers_dotplot, device = 'tiff', height = 3.75, width = 7.25)
 
 
@@ -527,12 +439,12 @@ de_markers_seurat_heatmap <- expr_data %>%
   scale_y_discrete(expand = c(0,0)) +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 14, angle = 45, hjust = 1, color = 'black'),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1, color = 'black'),
         axis.text.y = element_text(size = 12, color = 'black'),
         legend.position = 'right',
         legend.box.margin = margin(0,0,0,-2,unit='mm'),
         legend.margin = margin(0,0,0,0),
-        legend.title = element_text(angle = 90, color = 'black', size = 14, vjust = 1, hjust = 0),
+        legend.title = element_text(angle = 90, color = 'black', size = 12, vjust = 1, hjust = 0),
         legend.text = element_text(size = 12, color = 'black')) +
   guides(fill = guide_colorbar(title = 'Scaled Expression',
                                title.position = 'left',
@@ -604,12 +516,12 @@ de_markers_seurat_heatmap <- expr_data %>%
   scale_y_discrete(expand = c(0,0)) +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank(),
-        axis.text.x = element_text(size = 14, angle = 45, hjust = 1, color = 'black'),
-        axis.text.y = element_text(size = 12, color = 'black'),
+        axis.text.x = element_text(size = 11, angle = 45, hjust = 1, color = 'black'),
+        axis.text.y = element_text(size = 12, color = 'black', face = 'italic'),
         legend.position = 'right',
         legend.box.margin = margin(0,0,0,-2,unit='mm'),
         legend.margin = margin(0,0,0,0),
-        legend.title = element_text(angle = 90, color = 'black', size = 14, vjust = 0.5, hjust = 0.5),
+        legend.title = element_text(angle = 90, color = 'black', size = 12, vjust = 0.5, hjust = 0.5),
         legend.text = element_text(size = 12, color = 'black')) +
   guides(fill = guide_colorbar(title = 'z-score',
                                title.position = 'left',
@@ -618,7 +530,7 @@ de_markers_seurat_heatmap <- expr_data %>%
                                frame.linewidth = 1,
                                ticks.linewidth = 1))
 de_markers_seurat_heatmap
-ggsave(filename = './results/revision_figures/vascular_de_markers_heatmap.tiff',
+ggsave(filename = paste0(results_out, 'vascular_de_markers_heatmap.tiff'),
        plot = de_markers_seurat_heatmap, device = 'tiff',
        height = 11, width = 4.5)
 
@@ -635,8 +547,7 @@ counts[['time']] <- plyr::mapvalues(
   to = c('Uninj')
 )
 count_these <- c('A-Endothelial',
-                 'C1-Endothelial',
-                 'C2-Endothelial',
+                 'C-Endothelial',
                  'V-Endothelial',
                  'Tip Cell',
                  'Pericyte',
@@ -656,7 +567,7 @@ vascular_prop <- counts %>%
   scale_fill_manual(values = vascular_cols) +
   ylab('Prop. of cells') + 
   theme(axis.title.x = element_blank(), 
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black'),
         axis.line = element_line(size = 1), 
         panel.background = element_rect(fill = NA), 
@@ -681,7 +592,7 @@ vascular_counts <- counts %>%
   scale_fill_manual(values = vascular_cols) +
   ylab(label = '# of cells') +
   theme(axis.title.x = element_blank(),
-        axis.title.y = element_text(size = 12, color = 'black', face = 'bold'), 
+        axis.title.y = element_text(size = 12, color = 'black'), 
         axis.text.x = element_text(size = 12, color = 'black', angle = 45, hjust = 1),
         axis.text.y = element_text(size = 12, color = 'black'),
         legend.position = 'none', 
@@ -803,7 +714,7 @@ vascular_subcluster_counts_plot <- vascular_subcluster_counts %>%
   ylab(label = 'Number of cells') +
   facet_wrap(. ~ vascular_subcluster, scales = 'free_y', ncol = 5) +
   scale_fill_manual(values = time_cols) +
-  theme(plot.title = element_text(size = 14, color = 'black', face = 'bold'),
+  theme(plot.title = element_text(size = 14, color = 'black'),
         panel.border = element_rect(fill = NA, color = 'black'),
         strip.text = element_text(size = 12),
         axis.title.x = element_blank(),
