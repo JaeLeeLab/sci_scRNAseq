@@ -88,7 +88,7 @@ match_metadata <- function(order.char, obs.ls, col.char) {
   return(meta_dat)
 }
 
-cols_transfer <- c('L1_taxon','L2_taxon','L3_taxon','myeloid_subcluster','vascular_subcluster','macroglia_subcluster','preprint_subtype','myeloid_seurat_res.0.35','vascular_seurat_res.0.4','macroglia_seurat_res.0.4','myeloid_UMAP_1','myeloid_UMAP_2','vascular_UMAP_1','vascular_UMAP_2','macroglia_UMAP_1','macroglia_UMAP_2')
+cols_transfer <- c('celltype','myeloid_subcluster','vascular_subcluster','macroglia_subcluster','L1_taxon','L2_taxon','L3_taxon','preprint_subtype','myeloid_seurat_res.0.35','vascular_seurat_res.0.4','macroglia_seurat_res.0.4','myeloid_UMAP_1','myeloid_UMAP_2','vascular_UMAP_1','vascular_UMAP_2','macroglia_UMAP_1','macroglia_UMAP_2')
 obs_transfer <- lapply(
   X = cols_transfer,
   FUN = match_metadata,
@@ -106,7 +106,7 @@ obs_transfer <- data.frame(
 colnames(obs_transfer) <- cols_transfer
 umap_sci <- sci[['umap']]@cell.embeddings
 colnames(umap_sci) <- c('sci_UMAP_1','sci_UMAP_2')
-cols_sci <- c('sample_id','time','celltype','orig.ident','nCount_RNA','nFeature_RNA','S.Score','G2M.Score','Phase','CC.Difference','percent_mt','percent_rp','percent_hbb','doublet_scores','dissociationMethod','chemistry')
+cols_sci <- c('sample_id','time','orig.ident','nCount_RNA','nFeature_RNA','S.Score','G2M.Score','Phase','CC.Difference','percent_mt','percent_rp','percent_hbb','doublet_scores','dissociationMethod','chemistry')
 obs_sci <- do.call(what = cbind, args = list(obs_transfer, sci@meta.data[, cols_sci], umap_sci))
 obs_sci <- obs_sci[match(x = colnames(x_sci), table = rownames(obs_sci)),]
 for (i in 1:ncol(obs_sci)) {
@@ -115,6 +115,8 @@ for (i in 1:ncol(obs_sci)) {
   }
 }
 obs_sci$L1_taxon[obs_sci$celltype == 'Neuron'] <- 'Neural'
+obs_sci$L2_taxon[obs_sci$celltype == 'Neuron'] <- 'Neuron'
+obs_sci$L2_taxon[obs_sci$celltype == 'Lymphocyte'] <- 'Lymphocyte'
 
 write.csv(x = obs_sci, file = './data/shinyAppData/obs_sci.csv', quote = FALSE)
 obs_sci <- read.csv(file = './data/shinyAppData/obs_sci.csv', row.names = 1)
@@ -136,29 +138,38 @@ vars_sci <- read.csv(file = './data/shinyAppData/vars_sci.csv', header = FALSE, 
 
 # Count matrix ------------------------------------------------------------
 
-x_sci <- sci[['RNA']]@counts
 log_x_sci <- sci[['RNA']]@data
+log_x_sci <- round(log_x_sci, digits = 4)
 
-saveRDS(object = x_sci, file = './data/shinyAppData/x_sci.rds')
 saveRDS(object = log_x_sci, file = './data/shinyAppData/log_x_sci.rds')
-# x_sci <- readRDS(file = './data/shinyAppData/x_sci.rds')
 log_x_sci <- readRDS(file = './data/shinyAppData/log_x_sci.rds')
 
+
+
+# Altogether now ----------------------------------------------------------
+
 # Last minute finishes and data
-log_x_sci <- round(log_x_sci, digits = 4)
-gene <- rownames(x_sci)
+genes <- rownames(log_x_sci)
 numerical_data <- c(rownames(log_x_sci), colnames(obs_sci)[grepl('numeric', sapply(obs_sci, class))])
-numerical_data <- numerical_data[!numerical_data %in% gene]
+numerical_data <- numerical_data[!numerical_data %in% genes]
 numerical_data <- numerical_data[!grepl('UMAP', numerical_data)]
 categorical_data <- c(colnames(obs_sci)[grepl('character', sapply(obs_sci, class))])
 
-sample_subset <- sample(x = 1:ncol(log_x_sci),
-                        size = ncol(log_x_sci)/4,
-                        replace = FALSE)
+s1 <- split(x = rownames(obs_sci), f = obs_sci$time)
+s1 <- lapply(s1, function(x) {x[sample(1:length(x), size = length(x)/2)]})
+s1 <- unlist(s1, use.names = FALSE)
+s1 <- obs_sci[s1,]
+s1 <- split(x = rownames(s1), f = s1$celltype)
+s1 <- lapply(s1, function(x) {x[sample(1:length(x), size = length(x)/2)]})
+s1 <- unlist(s1, use.names = FALSE)
+sample_subset <- s1
 saveRDS(sample_subset, file = './data/shinyAppData/sample_subset.rds')
 
 log_x_sci <- log_x_sci[,sample_subset]
 obs_sci <- obs_sci[sample_subset,]
 
-save(log_x_sci, obs_sci, vars_sci, numerical_data, categorical_data, gene,
+save(log_x_sci, obs_sci, vars_sci, numerical_data, categorical_data, genes,
      file = './mouseSCI_2021/SCI_portal_data.RData')
+     
+# obs_sci <- obs_sci[,c(19,4,5,6,1,2,3,7:18,20:34)]
+# genes <- genes[c(19443, 19515, 21138, 21213)]

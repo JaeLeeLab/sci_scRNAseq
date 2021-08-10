@@ -1,10 +1,8 @@
 
 library('shiny')
 library('ggplot2')
-library('dplyr')
 
 source('helper.R')
-
 
 # UI: for app to query SCI scRNAseq -------------------------------------
 
@@ -87,31 +85,24 @@ ui <- fluidPage(
           width = 2,
           div(style = 'height:10px'),
           selectInput(
-            inputId = 'gene1',
-            label = 'Type 1st gene of interest',
-            choices = gene,
-            selected = 'Cx3cr1',
-            multiple = FALSE
-          ),
-          selectInput(
-            inputId = 'gene2',
-            label = 'Type 2nd gene of interest',
-            choices = gene,
-            selected = 'Cx3cr1',
-            multiple = FALSE
-          ),
-          selectInput(
-            inputId = 'dataset',
+            inputId = 'dataset_in',
             label = 'Select dataset',
             choices = list('sci','myeloid','vascular','macroglia'),
-            selected = 'macroglia',
+            selected = 'sci',
             multiple = FALSE
           ),
           selectInput(
-            inputId = 'vln.group.by',
-            label = 'Group violin by:',
+            inputId = 'groupby_in',
+            label = 'Group cells by:',
             choices = categorical_data,
-            selected = 'L2_taxon',
+            selected = 'celltype',
+            multiple = FALSE
+          ),
+          selectInput(
+            inputId = 'gene_in',
+            label = 'Select gene of interest',
+            choices = genes,
+            selected = 'Cx3cr1',
             multiple = FALSE
           )
         ),
@@ -120,40 +111,35 @@ ui <- fluidPage(
         mainPanel = mainPanel(
           width = 10,
           
-          ##### Query two genes at once ----
+          ##### Query gene and cluster ----
           fluidRow(
             column(
-              width = 5,
-              # div(style = 'height:70px'),
+              width = 4,
               plotOutput(
-                outputId = 'expression_gene1_UMAPplot',
-                height = '550px'
+                outputId = 'cluster_UMAPplot',
+                height = '700px',
               )
             ),
             column(
-              width = 5,
-              # div(style = 'height:70px'),
+              width = 8,
               plotOutput(
-                outputId = 'expression_gene2_UMAPplot',
-                height = '550px'
+                outputId = 'expression_gene_splitUMAPplot',
+                height = '700px'
               )
             )
           ),
-          
-          #### Expression violin plot ----
+          br(),
           fluidRow(
             column(
-              width = 10,
-              # div(style = 'margin-top:50px'),
+              width = 4,
               plotOutput(
-                outputId = 'expression_gene1_VlnPlot',
-                height = '250px'
-              ),
-              plotOutput(
-                outputId = 'expression_gene2_VlnPlot',
-                height = '250px'
-              ),
-              br()
+                outputId = 'expression_gene_DotPlot',
+                height = '550px',
+              )
+            ),
+            column(
+              width = 1
+              # insert data table
             )
           )
         )
@@ -169,64 +155,98 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   ## populate inputs ----
-  updateSelectizeInput(
-    session = session,
-    label = 'Type 1st gene of interest',
-    inputId = 'gene1',
-    choices = gene,
-    selected = 'Cx3cr1',
-    server = TRUE
-  )
-  updateSelectizeInput(
-    session = session,
-    label = 'Type 2nd gene of interest',
-    inputId = 'gene2',
-    choices = gene,
-    selected = 'Cx3cr1',
-    server = TRUE
-  )
+#   ## electInput(
+#   inputId = 'dataset_in',
+#   label = 'Select dataset_in',
+#   choices = list('sci','myeloid','vascular','macroglia'),
+#   selected = 'sci',
+#   multiple = FALSE
+#   ),
+# selectInput(
+#   inputId = 'groupby_in',
+#   label = 'Group cells by:',
+#   choices = categorical_data,
+#   selected = 'celltype',
+#   multiple = FALSE
+# ),
+# selectInput(
+#   inputId = 'gene',
+#   label = 'Select gene of interest',
+#   choices = gene,
+#   selected = 'Cx3cr1',
+#   multiple = FALSE
+# ),
+# actionButton(
+#   inputId = 'geneplot',
+#   label = 'Plot expression'
+# )
+# ),
   updateSelectInput(
     session = session,
     label = 'Select dataset',
-    inputId = 'dataset',
+    inputId = 'dataset_in',
     choices = list('sci','myeloid','vascular','macroglia'),
-    selected = 'macroglia'
+    selected = 'sci'
   )
   updateSelectInput(
     session = session,
-    label = 'Group violin by:',
-    inputId = 'vln.group.by',
-    selected = 'L2_taxon',
+    label = 'Group cells by:',
+    inputId = 'groupby_in',
+    selected = 'celltype',
     choices = categorical_data
   )
+  updateSelectizeInput(
+    session = session,
+    label = 'Select gene of interest',
+    inputId = 'gene_in',
+    choices = genes,
+    selected = 'Cx3cr1',
+    server = TRUE
+  )
   
-  ## expression_gene1_UMAPplot ----
-  output$expression_gene1_UMAPplot <- renderPlot(expr = {
-    expression_gene1_UMAPplot(gene1 = input$gene1, dataset = input$dataset)
+  
+  ## cluster_UMAPplot ----
+  output$cluster_UMAPplot <- renderPlot(expr = {
+    cluster_UMAPplot(dataset = input$dataset_in, groupby = input$groupby_in)
   })
   
-  # ## expression_gene2_UMAPplot ----
-  output$expression_gene2_UMAPplot <- renderPlot(expr = {
-    expression_gene2_UMAPplot(gene2 = input$gene2, dataset = input$dataset)
+  ## expression_gene_splitUMAPplot ----
+  output$expression_gene_splitUMAPplot <- renderPlot(expr = {
+    expression_gene_splitUMAPplot(gene = input$gene_in, 
+                                  dataset = input$dataset_in)
   })
   
-  # ## expression_gene1_VlnPlot ----
-  output$expression_gene1_VlnPlot <- renderPlot(expr = {
-    expression_gene1_VlnPlot(
-      gene1 = input$gene1,
-      dataset = input$dataset,
-      group.by = input$vln.group.by
-    )
+  # ## expression_gene_UMAPplot ----
+  # output$expression_gene_UMAPplot <- renderPlot(expr = {
+  #   expression_gene_UMAPplot(gene = input$gene_in, dataset = input$dataset_in)
+  # })
+  
+  ## expresssion_gene_DotPlot ----
+  output$expression_gene_DotPlot <- renderPlot(expr = {
+    expression_gene_DotPlot(gene = input$gene_in, 
+                            dataset = input$dataset_in,
+                            groupby = input$groupby_in)
   })
-
+  
+  # observeEvent(input$geneplot, {
+  #   renderPlot(expr = {
+  #     cluster_UMAPplot(dataset = input$dataset_in, groupby = input$groupby_in)
+  #   })
+  # })
+  
+  ## expression_gene2_UMAPplot ----
+  # output$expression_gene2_UMAPplot <- renderPlot(expr = {
+  #   expression_gene2_UMAPplot(gene2 = input$gene2, dataset = input$dataset_in)
+  # })
+  
   ## expression_gene2_VlnPlot ----
-  output$expression_gene2_VlnPlot <- renderPlot(expr = {
-    expression_gene2_VlnPlot(
-      gene2 = input$gene2,
-      dataset = input$dataset,
-      group.by = input$vln.group.by
-    )
-  })
+  # output$expression_gene2_VlnPlot <- renderPlot(expr = {
+  #   expression_gene2_VlnPlot(
+  #     gene2 = input$gene2,
+  #     dataset = input$dataset_in,
+  #     groupby = input$vln.groupby_in
+  #   )
+  # })
 }
 
 
