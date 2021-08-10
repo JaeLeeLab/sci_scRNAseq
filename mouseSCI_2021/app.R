@@ -117,14 +117,14 @@ ui <- fluidPage(
               width = 4,
               plotOutput(
                 outputId = 'cluster_UMAPplot',
-                height = '700px',
+                height = '500px',
               )
             ),
             column(
               width = 8,
               plotOutput(
                 outputId = 'expression_gene_splitUMAPplot',
-                height = '700px'
+                height = '500px'
               )
             )
           ),
@@ -255,7 +255,8 @@ server <- function(input, output, session) {
 
 shiny::shinyApp(ui = ui, server = server)
 
-# rsconnect::deployApp('shinyApp')
+# setwd('D:/MiamiProject/sci_scRNAseq/')
+# rsconnect::deployApp('mouseSCI_2021')
 # rsconnect::accounts()
 # rsconnect::accountInfo()
 # rsconnect::

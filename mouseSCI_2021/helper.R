@@ -177,7 +177,7 @@ cluster_UMAPplot <- function(
   y_range[1] <- y_range[1] - 0.9*(y_range[2] - y_range[1])
   legend_nrow <- ceiling(length(unique(df$group))/3)
   new_y_intersp <- function(n) {
-    1.15 * signif(7/n, digits = 2)
+    1.15 * signif(5/n, digits = 2)
   }
   {
     par(mai = c(0.1, 0.1, 1, 0.1), mar = c(0.2,0.2,2,0.2), xpd = NA)
