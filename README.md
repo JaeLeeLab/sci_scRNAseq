@@ -20,6 +20,6 @@ Full gene x cell count matrix for this study can be found here: https://drive.go
 
 ## Using the MouseSCI_2021 portal
 
-The mouseSCI scRNAseq data can been viewed in this [browser](https://jameschoi94.shinyapps.io/mousesci_2021/). Please be patient since data sizes are large (> 1Gb). Chrome users may have receive a "Page unresponsive" message - click "Wait" and site will eventually load.
+The mouseSCI scRNAseq data can been viewed in this [browser](https://jaeleelab.shinyapps.io/mouseSCI_2021/). Please be patient since data sizes are large (> 1Gb). Chrome users may have receive a "Page unresponsive" message - click "Wait" and site will eventually load.
 
 NOTE: We are using a free version of shinyapp.io so there are restrictions on data upload size. **25% of cells are sampled and displayed**. 
