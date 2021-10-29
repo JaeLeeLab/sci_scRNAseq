@@ -16,6 +16,7 @@ Full gene x cell count matrix for this study can be found here: https://drive.go
 * **x_sci.rds** is a dgCMatrix class object that can be read into R. The matrix contains the full count matrix (un-normalized, raw counts). Column names contain unique cell barcodes and row names contain gene names.
 * **obs_sci.csv** contains cell-level metadata such as sample ID, injury time-point, cell-type classifications, etc. All cluster analysis results from the paper can be found in this spreadsheet.
 * **vars_sci.csv** contains gene-level metadata (empty).
+* **sci.rds** contains the SeuratObject for the full SCI dataset.
 
 
 ## Using the MouseSCI_2021 portal
