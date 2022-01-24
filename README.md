@@ -23,7 +23,7 @@ Direct downloads for Seurat object and gene x cell count matrix can be found her
 
 A web portal is available to more easily browse through the gene expression data. Portal is available at https://jaeleelab.shinyapps.io/SCI_singlecell
  
-Code repository to build the ShinyApp portal is avaiable here: https://github.com/JaeLeeLab/SCI_SingleCell_portal
+Code repository to build the ShinyApp portal is available here: https://github.com/JaeLeeLab/SCI_SingleCell_portal
 
 ## Acknowledgements
 
