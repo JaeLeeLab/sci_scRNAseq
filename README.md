@@ -2,16 +2,26 @@
 
 This repository accompanies the paper **Single-cell analysis of the cellular heterogeneity and interactions in the injured mouse spinal cord** by Milich and Choi, et al. Paper can be found here: [link](https://doi.org/10.1084/jem.20210040). 
 
-Code used for analysis in producing results presented in the paper can be found in the *scripts* folder. Code used to build the shinyApp site can be found in the *mouseSCI_2021* folder. 
+Code used for analysis in producing results presented in the paper can be found in the *scripts* folder. Code used to build the shinyApp site can be found in the *mouseSCI_2021* folder. (Apologies for the disorganized code, it will eventually be reorganized.)
 
+<<<<<<< HEAD
 If you have any questions regarding this repository, study, data, or code, please contact James Choi or Dr Jae Lee (corresponding author, [lab website](https://www.jaeleelab.com/)).
+=======
+If you have any questions regarding the study, data, or code, feel free to contact James Choi or Dr Jae Lee (corresponding author, [lab website](https://www.jaeleelab.com/)).
+>>>>>>> 74ff64dd3fb837a659fb879f2282375d68ee77b0
 
 
 ## Data Availability
 
+<<<<<<< HEAD
 Raw data are available from the SRA (Sequence Read Archive) database under study accession [SRP295673](https://trace.ncbi.nlm.nih.gov/Traces/sra/?study=SRP295673). Processed scRNAseq data are available at NCBI GEO accession [GSE162610](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162610).
 
 Direct downloads for Seurat object and gene x cell count matrix can be found here: https://drive.google.com/drive/u/0/folders/1AUbh2A3ogbDBaWlhf-x3UGjLno-__M-z
+=======
+scRNAseq data for this study is available at NCBI GEO accession no. GSE162610.
+
+Full gene x cell count matrix for this study can be found here: https://drive.google.com/drive/u/0/folders/1AUbh2A3ogbDBaWlhf-x3UGjLno-__M-z
+>>>>>>> 74ff64dd3fb837a659fb879f2282375d68ee77b0
 
 * **x_sci.rds** is a dgCMatrix class object that can be read into R. The matrix contains the full count matrix (un-normalized, raw counts). Column names contain unique cell barcodes and row names contain gene names.
 * **obs_sci.csv** contains cell-level metadata such as sample ID, injury time-point, cell-type classifications, etc. All cluster analysis results from the paper can be found in this spreadsheet.
@@ -19,11 +29,19 @@ Direct downloads for Seurat object and gene x cell count matrix can be found her
 * **sci.rds** contains the SeuratObject for the full SCI dataset.
 
 
+<<<<<<< HEAD
 ## SCI_singlecell web portal
 
 A web portal is available to more easily browse through the gene expression data. Portal is available at https://jaeleelab.shinyapps.io/SCI_singlecell
  
 Code repository to build the ShinyApp portal is avaiable here: https://github.com/JaeLeeLab/SCI_SingleCell_portal
+=======
+## Using the MouseSCI_2021 portal
+
+The mouseSCI scRNAseq data can been viewed in this [browser](https://jaeleelab.shinyapps.io/mouseSCI_2021/). Please be patient since data sizes are large (> 1Gb). Chrome users may have receive a "Page unresponsive" message - click "Wait" and site will eventually load.
+
+NOTE: We are using a free version of shinyapp.io so there are restrictions on data upload size. **25% of cells are sampled and displayed**. 
+>>>>>>> 74ff64dd3fb837a659fb879f2282375d68ee77b0
 
 
 ## Acknowledgements
