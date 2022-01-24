@@ -1,0 +1,11 @@
+	nCells_estimated	Multiplet_rate_10X	Threshold_score	singlet	multiplet	detected_multiplet_rate	detectable_doublet_fraction
+filtered_feature_bc_matrix_1dpi_sample1	8000	0.061240821	0.322607275	8027	128	0.015946182	0.291
+filtered_feature_bc_matrix_1dpi_sample2	6000	0.046062419	0.22754956	5563	127	0.022829409	0.46
+filtered_feature_bc_matrix_1dpi_sample3	10000	0.076419222	0.305803442	9545	232	0.024305919	0.385
+filtered_feature_bc_matrix_3dpi_sample1	12000	0.091597624	0.357983649	12032	387	0.032164229	0.367
+filtered_feature_bc_matrix_3dpi_sample2	9000	0.068830022	0.229943813	8781	437	0.049766541	0.553
+filtered_feature_bc_matrix_7dpi_sample1	10000	0.076419222	0.283332119	9543	401	0.042020329	0.386
+filtered_feature_bc_matrix_7dpi_sample2	9000	0.068830022	0.255173284	8264	302	0.036544046	0.417
+filtered_feature_bc_matrix_uninj_sample1	3000	0.023294816	0.152789547	3145	48	0.015262321	0.496
+filtered_feature_bc_matrix_uninj_sample2	1000	0.008116415	0.076161429	1266	6	0.004739336	0.435
+filtered_feature_bc_matrix_uninj_sample3	12000	0.091597624	0.283302774	11273	600	0.053224519	0.56

@@ -1,0 +1,14 @@
+filtered_feature_bc_matrix_1dpi_sample1
+Preprocessing...
+Simulating doublets...
+Embedding transcriptomes using PCA...
+Calculating doublet scores...
+Automatically set threshold at doublet score = 0.32
+Detected doublet rate = 1.6%
+Estimated detectable doublet fraction = 29.1%
+Overall doublet rate:
+	Expected   = 6.1%
+	Estimated  = 5.4%
+Elapsed time: 12.6 seconds
+
+

@@ -1,18 +1,68 @@
+
+# MS files
 *.pptx
-*.pdf
 *.docx
-*.svg
-*.tsv
-*.txt
-*.csv
 *.xlsx
-*.txt.gz
-*.mat
+
+# Ignore images and PDFs
+*.pdf
+*.svg
+*.tiff
+*.png
+!/notes/*.png
+*.jpeg
+*.jpg
+
+# Reference files that are from other studies
+/ref/GSE*
+/ref/GSM*
+
+# CellRanger outputs
+/data/10X*
+/results/10X*
+
+# GEO submission and PUBLIC downloadable's
+/data/GEO*
+/data/PUBLIC*
+
+# All R-objects and compressed h5
 *.rds
-/results/*
-/notes/*
-/data/*
-/ref/*/*
+*.h5
+
+# Scratch R files
+/notes/**.R
+
+# Large ligand-receptor results
+/results/ligand_receptor_analysis/*.tsv
+/results/ligand_receptor_analysis/*.csv
+
+# IKAP cluster optimization results
+*IKAP*
+
+# EmptyDrops outputs
+results/preprocessing/*EmptyDrops*
+
+# WGCNA was not used
+/results/revision_figures/WGCNA*
+
+# Temporaries
+*tmp*
+
+# *.tsv
+# *.txt
+# *.csv
+# *.txt.gz
+# *.mat
+# *.rds
+# *.h5
+# *.tiff
+
+# Ignore historical
+/deprecated/*
+# /results/*
+# /notes/*
+# /data/*
+# /ref/*/*
 
 .Rproj.user
 *.RData

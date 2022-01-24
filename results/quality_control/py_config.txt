@@ -1,0 +1,13 @@
+python:         C:/Users/JSC_PC/anaconda3/python.exe
+libpython:      C:/Users/JSC_PC/anaconda3/python37.dll
+pythonhome:     C:/Users/JSC_PC/anaconda3
+version:        3.7.6 (default, Jan  8 2020, 20:23:39) [MSC v.1916 64 bit (AMD64)]
+Architecture:   64bit
+numpy:          C:/Users/JSC_PC/anaconda3/Lib/site-packages/numpy
+numpy_version:  1.18.1
+scrublet:       C:\Users\JSC_PC\ANACON~1\lib\site-packages\scrublet\__init__.p
+
+python versions found: 
+ C:/Users/JSC_PC/anaconda3/python.exe
+ C:/Users/JSC_PC/AppData/Local/Programs/Python/Python37-32/python.exe
+

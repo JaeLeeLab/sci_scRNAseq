@@ -1,0 +1,11 @@
+	low	high	fail	pass
+filtered_feature_bc_matrix_1dpi_sample1	1233.95218364521	22524.3606424796	201	7954
+filtered_feature_bc_matrix_1dpi_sample2	1530.86486738605	20041.2993031756	68	5622
+filtered_feature_bc_matrix_1dpi_sample3	1406.3361923488	74750.2692257577	86	9691
+filtered_feature_bc_matrix_3dpi_sample1	796.911739801617	37326.7383504791	23	12396
+filtered_feature_bc_matrix_3dpi_sample2	2471.62883534814	29087.4746126165	256	8962
+filtered_feature_bc_matrix_7dpi_sample1	763.870561741949	13917.0960794158	74	9870
+filtered_feature_bc_matrix_7dpi_sample2	2126.06736787666	29884.6790840195	275	8291
+filtered_feature_bc_matrix_uninj_sample1	1069.45452011653	9604.91989774447	163	3030
+filtered_feature_bc_matrix_uninj_sample2	1841.37684473437	11573.9860968407	80	1192
+filtered_feature_bc_matrix_uninj_sample3	1935.8785934896	26504.0220872072	1342	10531
