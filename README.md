@@ -19,7 +19,6 @@ Direct downloads for Seurat object and gene x cell count matrix can be found her
 * **sci.rds** contains the SeuratObject for the full SCI dataset.
 
 
-<<<<<<< HEAD
 ## SCI_singlecell web portal
 
 A web portal is available to more easily browse through the gene expression data. Portal is available at https://jaeleelab.shinyapps.io/SCI_singlecell
